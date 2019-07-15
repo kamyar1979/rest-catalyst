@@ -4,12 +4,12 @@ import inspect
 from http import HTTPStatus
 from urllib.parse import parse_qs
 
-from lib.dispatcher import parse_value, registered_deserializers, deserialize, validate_model
-from lib.errors import ApiError
+from catalyst.dispatcher import parse_value, registered_deserializers, deserialize, validate_model
+from catalyst.errors import ApiError
 from flask import request
 from functools import wraps
-from lib.constants import HeaderKeys, MimeTypes, DEFAULT_CHARSET
-from lib.extensions import serialize
+from catalyst.constants import HeaderKeys, MimeTypes, DEFAULT_CHARSET
+from catalyst.extensions import serialize
 
 
 def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = (),

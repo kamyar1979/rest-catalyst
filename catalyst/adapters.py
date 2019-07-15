@@ -12,7 +12,7 @@ from sqlalchemy_utils.functions import get_type
 from datetime import datetime
 import operator
 import collections
-from typing import Callable, NamedTuple, Tuple
+from typing import Callable, NamedTuple, Tuple, Optional
 from logging import Logger
 from sqlalchemy.sql.elements import ColumnElement, BinaryExpression
 
@@ -67,7 +67,7 @@ class QueryAdapter:
         self.reserved_identifiers = {}
         self.extra_columns = extra_columns
         self.aliases = {}
-        self.logger: Logger = None
+        self.logger: Optional[Logger] = None
         self.bound_params = bound_params
         self.param_list = []
         self.use_row_number = False
@@ -445,11 +445,11 @@ class QueryAdapter:
 
 
 class ODataQueryAdapter(QueryAdapter):
-    filter_pattern = re.compile(f'{PartConstants.Filter}=(?P<filter>[^&]+)')
-    sort_pattern = re.compile(f'{PartConstants.OrderBy}=(?P<sort>[^$]+)')
-    top_pattern = re.compile(f'{PartConstants.Top}=(?P<top>\d+)')
-    skip_pattern = re.compile(f'{PartConstants.Skip}=(?P<skip>\d+)')
-    select_pattern = re.compile(f'{PartConstants.Select}=(?P<select>\w+)')
+    filter_pattern = re.compile(fr'{PartConstants.Filter}=(?P<filter>[^&]+)')
+    sort_pattern = re.compile(fr'{PartConstants.OrderBy}=(?P<sort>[^$]+)')
+    top_pattern = re.compile(fr'{PartConstants.Top}=(?P<top>\d+)')
+    skip_pattern = re.compile(fr'{PartConstants.Skip}=(?P<skip>\d+)')
+    select_pattern = re.compile(fr'{PartConstants.Select}=(?P<select>\w+)')
 
     def __init__(self, cls):
         super().__init__(cls)

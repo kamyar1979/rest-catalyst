@@ -8,10 +8,10 @@ from typing import Iterable, Any, get_type_hints
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
-from lib.constants import RegExPatterns, MimeTypes, HeaderKeys, ODATA_COUNT, ODATA_VALUE, SerializerFlags
+from catalyst.constants import RegExPatterns, MimeTypes, HeaderKeys, ODATA_COUNT, ODATA_VALUE, SerializerFlags, \
+    DEFAULT_LOCALE, DEFAULT_CHARSET
 from khayyam import JalaliDatetime, JalaliDate
 from pytz import country_timezones, timezone
-from lib.main import DEFAULT_LOCALE, DEFAULT_CHARSET
 import re
 
 
@@ -20,7 +20,7 @@ class SerializationFlags:
     """
     Flags read from http header and changes serialization
     """
-    IncludeNulls : bool = False
+    IncludeNulls: bool = False
     ReplaceNoneWithEmptyString: bool = False
 
     def __init__(self, flags: str):
@@ -121,6 +121,7 @@ def to_dict(obj: Any,
             if not attr.startswith('_'):
                 result[attr] = to_dict(getattr(obj, attr), flags=flags, locale=locale)
         return result
+
 
 def serialize(result: object) -> Response:
     """

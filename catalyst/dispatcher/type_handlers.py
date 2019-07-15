@@ -8,9 +8,9 @@ from geojson.geometry import Geometry
 from sqlalchemy import Binary
 from sqlalchemy.orm import RelationshipProperty
 
-from lib.constants import DEFAULT_CHARSET
-from lib.dispatcher import type_handler
-from lib.constants import SRID
+from catalyst.constants import DEFAULT_CHARSET
+from catalyst.dispatcher import type_handler
+from catalyst.constants import SRID
 
 def adapt_field_type(column, value):
     """

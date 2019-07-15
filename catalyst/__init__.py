@@ -1,21 +1,20 @@
-from flask import Flask
-from flask_cors import CORS
-from dotenv import load_dotenv
-import os
 import gettext
-from importlib import import_module
-from lib.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET
 import logging.config
+import os
+from importlib import import_module
 
-from lib.errors import ApiError
-from lib.extensions import serialize
+from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET
+from catalyst.errors import ApiError
+from catalyst.extensions import serialize
 
-load_dotenv()
+db = None
+app = None
 
-app = Flask(__name__)
-CORS(app)
 
-app.config.update({key: int(os.getenv(key)) if os.getenv(key).isdecimal() else os.getenv(key) for key in os.environ})
+def register_application(flask_application, database):
+    global app, db
+    app = flask_application
+    db = database
 
 
 def register_handlers():
@@ -28,7 +27,7 @@ def register_handlers():
         if 'handler.py' in h:
             import_module('.handler', os.path.relpath(f, os.getcwd()).replace('/', '.'))
 
-    module = import_module('infrastructure.data_abstraction')
+    module = import_module('catalyst.data_abstraction')
     module.create_schema()
 
 
@@ -52,9 +51,3 @@ def init_i18n():
 
 def init_logging():
     logging.config.fileConfig(app.config[ConfigKeys.LoggingConfig])
-
-
-init_logging()
-init_i18n()
-register_handlers()
-register_error_handlers()

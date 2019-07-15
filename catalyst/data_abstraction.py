@@ -6,16 +6,16 @@ from sqlalchemy import func, Column
 from typing import Callable, Tuple, Union, AnyStr, TypeVar, List
 from toolz import compose
 
-from lib.model import db
-from lib.adapters import ODataQueryAdapter
-from lib.main import app
-from lib.constants import ConfigKeys, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from catalyst.adapters import ODataQueryAdapter
+from catalyst.constants import ConfigKeys, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from . import db, app
 
 logger = logging.getLogger('rdbms')
 
 session_factory = sessionmaker(bind=db.engine)
 
 T = TypeVar('T')
+
 
 @contextmanager
 def session_context(must_expunge=False, use_local_context=False) -> Session:
@@ -35,6 +35,7 @@ def call_db_func(db_session: Session):
     You can call function named MyFunc using the syntax repo.func.MyFunc(arg1, arg2)
     :return: Teh result of the RDBMS function
     """
+
     class FunctionWrapper(object):
 
         def __init__(self, func_name=None):
@@ -50,9 +51,10 @@ def call_db_func(db_session: Session):
     return FunctionWrapper()
 
 
-def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_type: str = 'uri', adapter_type=ODataQueryAdapter, *,
-                       opt: Union[Callable[[Query], Query], Tuple[Callable[[Query], Query], ...]] = None,
-                       opt2: Union[Callable[[Query], Query], Tuple[Callable[[Query], Query], ...]] = None,
+def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_type: str = 'uri',
+                       adapter_type=ODataQueryAdapter, *,
+                       query_options: Union[Callable[[Query], Query], Tuple[Callable[[Query], Query], ...]] = None,
+                       count_options: Union[Callable[[Query], Query], Tuple[Callable[[Query], Query], ...]] = None,
                        extra_columns: Tuple[Column, ...] = (),
                        expunge_after_all=True,
                        use_baked_queries=False,
@@ -63,8 +65,8 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
     :param cls: Main entity type for query
     :param content_type: Teh format of OData input
     :param adapter_type: Adapter type which can be OData or else
-    :param opt: Query Options (extra filters, join...) for main query
-    :param opt2: Query Options for count query
+    :param query_options: Query Options (extra filters, join...) for main query
+    :param count_options: Query Options for count query
     :param extra_columns: Add more column output
     :param expunge_after_all: Kill ORM session after getting the result
     :param use_baked_queries: Use bakery for caching ORm queries
@@ -81,10 +83,10 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
             adapter.perform_convenience(app.config.get(ConfigKeys.MaxPageSize) or MAX_PAGE_SIZE,
                                         app.config.get(ConfigKeys.DefaultPageSize) or DEFAULT_PAGE_SIZE)
 
-        options = compose(*opt) if isinstance(opt, Tuple) else opt
+        options = compose(*query_options) if isinstance(query_options, Tuple) else query_options
 
-        if opt2:
-            count_options = compose(*opt2) if isinstance(opt2, Tuple) else opt2
+        if count_options:
+            count_options = compose(*count_options) if isinstance(count_options, Tuple) else count_options
         else:
             count_options = options
 
@@ -96,6 +98,7 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
     finally:
         if expunge_after_all:
             db_session.expunge_all()
+
 
 def get_by_slug(cls: type, session: Session, slug: str):
     return session.query(cls).filter(cls.slug == slug).one_or_none()

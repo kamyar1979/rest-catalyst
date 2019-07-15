@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, ENUM, ARRAY, BYTEA
 import sqlalchemy
 from cerberus import Validator
 
-from lib.dispatcher import validation_handler
+from catalyst.dispatcher import validation_handler
 
 type_map = {Boolean: 'boolean', DateTime: 'datetime', JSONB: 'dict',
             Float: 'float', Integer: 'integer', BigInteger: 'integer', String: 'string',

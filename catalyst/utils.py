@@ -4,8 +4,8 @@ from typing import Tuple
 import ntplib
 import pytz
 
-from lib.constants import ConfigKeys
-from lib.main import app
+from catalyst.constants import ConfigKeys
+from . import app
 
 
 def get_current_time(tz=pytz.utc):
@@ -22,7 +22,6 @@ def get_current_time(tz=pytz.utc):
         return datetime.fromtimestamp(response.tx_time, tz)
     except:
         return tz.fromutc(datetime.utcnow())
-
 
 
 def validate(model: object, *required_fields) -> Tuple[str, ...]:

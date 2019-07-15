@@ -39,8 +39,8 @@ def run_setup():
         project_urls={
             "Documentation": "https://docs.sqlalchemy.org",
         },
-        packages=find_packages("lib"),
-        package_dir={"": "lib"},
+        packages=find_packages("catalyst"),
+        package_dir={"": "catalyst"},
         license="BSD",
         long_description=readme,
         python_requires=">=3.7",

@@ -9,7 +9,6 @@ from sqlalchemy import inspect
 from toolz import compose
 
 
-
 def create_named_tuple_mapping(model: Mapping,
                                dto_type: Type,
                                include: Set[str] = None,
@@ -122,7 +121,7 @@ def create_dto(model: object,
             try:
                 val: Any = mapping[k](model)
                 t: type = annotations[k].__args__[0] if hasattr(annotations[k], '__origin__') and \
-                                                        annotations[k].__origin__ == Union else annotations[k]
+                    annotations[k].__origin__ == Union else annotations[k]
                 if val is not None and type(val) != t:
                     if type(val) == WKBElement:
                         geom = wkb.loads(bytes(val.data))

@@ -3,8 +3,8 @@ from typing import Any
 import rapidjson
 import umsgpack
 
-from lib.constants import MimeTypes
-from lib.dispatcher import deserialization_handler
+from catalyst.constants import MimeTypes
+from catalyst.dispatcher import deserialization_handler
 
 
 @deserialization_handler(MimeTypes.JSON)
