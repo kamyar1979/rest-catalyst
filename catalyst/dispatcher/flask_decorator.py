@@ -10,6 +10,7 @@ from flask import request
 from functools import wraps
 from catalyst.constants import HeaderKeys, MimeTypes, DEFAULT_CHARSET
 from catalyst.extensions import serialize
+from . import validation, deserializers
 
 
 def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = (),
