@@ -1,3 +1,4 @@
+import inspect
 from dataclasses import is_dataclass, dataclass, fields
 from datetime import time, datetime, date
 from enum import Enum
@@ -58,10 +59,12 @@ def create_schema_from_dto(data_class: dataclass, ignore=()):
                 if f.type.__origin__ == Union:
                     t = f.type.__args__[0]
                     optional = True
-            if issubclass(t, Enum):
+            if inspect.isclass(t) and issubclass(t, Enum):
                 t = Enum
-            schema[f.name] = {'type': dto_type_map[t],
-                              'required': not optional}
+
+            if t in dto_type_map:
+                schema[f.name] = {'type': dto_type_map[t],
+                                  'required': not optional}
 
     return schema
 
