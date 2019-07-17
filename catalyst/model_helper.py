@@ -55,7 +55,7 @@ T = TypeVar('T', object, Tuple)
 U = TypeVar('U')
 
 
-def create_mapping(model: Type[T],
+def create_mapping(model: T,
                    dto_type: Type[U], *,
                    include: Optional[Set[str]] = None,
                    exclude: Optional[Set[str]] = None,
@@ -124,7 +124,7 @@ def create_mapping(model: Type[T],
     return result
 
 
-def create_dto(model: Type[T],
+def create_dto(model: T,
                dto_type: Type[U],
                mapping: Dict[str, Callable[[object], object]]) -> U:
     annotations = get_type_hints(dto_type)

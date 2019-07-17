@@ -2,7 +2,7 @@ import inspect
 from dataclasses import is_dataclass, dataclass, fields
 from datetime import time, datetime, date
 from enum import Enum
-from typing import Any, Union, Tuple, Type
+from typing import Any, Union, Tuple, Type, Dict
 
 from geojson.geometry import Geometry
 from sqlalchemy.types import Boolean, DateTime, Float, DATE, Date, Text, Integer, BigInteger, String, Time
@@ -13,16 +13,28 @@ from cerberus import Validator
 
 from catalyst.dispatcher import validation_handler
 
+
 type_map = {Boolean: 'boolean', DateTime: 'datetime', JSONB: 'dict',
             Float: 'float', Integer: 'integer', BigInteger: 'integer', String: 'string',
             ARRAY: 'list', Geometry: 'geometry', ENUM: 'string',
             Time: 'time', DATE: 'date', Date: 'date', Text: 'string',
             BYTEA: 'string'}
 
+
 dto_type_map = {bool: 'boolean', datetime: 'datetime',
                 float: 'float', int: 'integer', str: 'string',
                 tuple: 'list', Enum: 'string', time: 'time', date: 'date',
                 list: 'list'}
+
+
+def register_type_mapping(**kwargs: Dict[type, str]):
+    global type_map
+    type_map.update(kwargs)
+
+
+def register_dto_type_mapping(**kwargs: Dict[type, str]):
+    global dto_type_map
+    dto_type_map.update(kwargs)
 
 
 def create_schema(alchemy_model, ignore: Tuple[str, ...] = ()):

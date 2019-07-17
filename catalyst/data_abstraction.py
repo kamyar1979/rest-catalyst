@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import sessionmaker, Session, Query
 from sqlalchemy import func, Column
-from typing import Callable, Tuple, Union, AnyStr, TypeVar, List
+from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type
 from toolz import compose
 
 from catalyst.adapters import ODataQueryAdapter
@@ -100,8 +100,12 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
             db_session.expunge_all()
 
 
-def get_by_slug(cls: type, session: Session, slug: str):
-    return session.query(cls).filter(cls.slug == slug).one_or_none()
+def get_by_slug(cls: Type[T], session: Session, slug: str, natural_key: str = 'slug') -> T:
+    return session.query(cls).filter(getattr(cls, natural_key) == slug).one_or_none()
+
+
+def check_slug_exists(cls: Type[T], session: Session, slug: str, natural_key: str = 'slug') -> bool:
+    return session.query(cls.query.filter(getattr(cls, natural_key) == slug).exists()).scalar()
 
 
 def create_schema():
