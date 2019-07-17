@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Type, Tuple, Set, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar
+from typing import Type, Tuple, Set, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional
 
 import geojson
 import rapidjson
@@ -51,26 +51,42 @@ def create_named_tuple_mapping(model: Mapping,
     return result
 
 
-def create_mapping(model: Union[object, Tuple],
-                   dto_type: Type, *,
-                   include: Set[str] = None,
-                   exclude: Set[str] = None,
-                   prefix: str = None,
+T = TypeVar('T', object, Tuple)
+U = TypeVar('U')
+
+
+def create_mapping(model: Type[T],
+                   dto_type: Type[U], *,
+                   include: Optional[Set[str]] = None,
+                   exclude: Optional[Set[str]] = None,
+                   prefix: Optional[str] = None,
                    model_item_index: int = 0,
-                   **kwargs) -> Dict[str, Callable[[object], object]]:
+                   **kwargs: Dict[str, Callable[[Type[T]], Any]]) -> Dict[str, Callable[[Type[T]], Any]]:
+    """
+    Recursively creates mapping between ORm model objects and Python data classes
+    :param model: input object, ORM model type, or Named Tuple
+    :param dto_type: Type of output, usually a Python 3.7+ dataclass
+    :param include: Include extra fields that may not be in DTO type
+    :param exclude: Exclude fields although they are in DTO type
+    :param prefix: Add extra prefix to the field names
+    :param model_item_index: Starting index of named tuple, if the first parameter is named tuple
+    :param kwargs: Any extra fields that may not be in input type. Overrides the default implementation.
+    :return: A dictionary mapping values with corresponding functions
+    """
+
     if model is None:
         return {}
 
-    if issubclass(type(model), Tuple):
+    if issubclass(type(model), Tuple):  # The type is named tuple
         model_object_info = inspect(getattr(model, type(model[model_item_index]).__name__))
         extractor = attrgetter(type(model[0]).__name__)
     else:
         model_object_info = inspect(model)
         extractor = None
 
-    model_empty_fields = model_object_info.unloaded
+    model_empty_fields = model_object_info.unloaded  # Omit lazy-loaded fields
     attributes = model_object_info.attrs
-    relationships = model_object_info.mapper.relationships
+    relationships = model_object_info.mapper.relationships  # Discover relationships for nested objects
     result_object = dto_type()
     result = {}
     attr_list = set(item.key for item in attributes)
@@ -108,12 +124,9 @@ def create_mapping(model: Union[object, Tuple],
     return result
 
 
-T = TypeVar('T')
-
-
-def create_dto(model: object,
-               dto_type: Type[T],
-               mapping: Dict[str, Callable[[object], object]]) -> T:
+def create_dto(model: Type[T],
+               dto_type: Type[U],
+               mapping: Dict[str, Callable[[object], object]]) -> U:
     annotations = get_type_hints(dto_type)
 
     def create_result_dict():
@@ -121,7 +134,7 @@ def create_dto(model: object,
             try:
                 val: Any = mapping[k](model)
                 t: type = annotations[k].__args__[0] if hasattr(annotations[k], '__origin__') and \
-                    annotations[k].__origin__ == Union else annotations[k]
+                                                        annotations[k].__origin__ == Union else annotations[k]
                 if val is not None and type(val) != t:
                     if type(val) == WKBElement:
                         geom = wkb.loads(bytes(val.data))
