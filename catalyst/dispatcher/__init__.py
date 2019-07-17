@@ -19,7 +19,10 @@ def parse_value(val: Any, t: Type[T]) -> T:
             if k.__origin__ == Union:
                 if t in k.__args__:
                     return registered_types[k](val, requested_type=t)
-
+        elif hasattr(k, '__constraints__'):
+            for c in k.__constraints__:
+                if issubclass(t, c):
+                    return registered_types[k](val, requested_type=t)
         if issubclass(t, k):
             return registered_types[k](val, requested_type=t)
         else:

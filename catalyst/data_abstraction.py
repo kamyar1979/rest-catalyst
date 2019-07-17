@@ -10,7 +10,7 @@ from catalyst.adapters import ODataQueryAdapter
 from catalyst.constants import ConfigKeys, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from . import db, app
 
-logger = logging.getLogger('rdbms')
+logger = logging.getLogger('orm')
 
 session_factory = sessionmaker(bind=db.engine)
 
