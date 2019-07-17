@@ -16,7 +16,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as r_file:
 
 setup(
     name="RestCatalyst",
-    version=0.1,
+    version=0.2,
     description="Restful API Catalyst",
     author="Kamyar Inanloo",
     author_email="kamyar1979@gmail.com",
