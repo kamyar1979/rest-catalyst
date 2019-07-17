@@ -13,13 +13,11 @@ from cerberus import Validator
 
 from catalyst.dispatcher import validation_handler
 
-
 type_map = {Boolean: 'boolean', DateTime: 'datetime', JSONB: 'dict',
             Float: 'float', Integer: 'integer', BigInteger: 'integer', String: 'string',
             ARRAY: 'list', Geometry: 'geometry', ENUM: 'string',
             Time: 'time', DATE: 'date', Date: 'date', Text: 'string',
             BYTEA: 'string'}
-
 
 dto_type_map = {bool: 'boolean', datetime: 'datetime',
                 float: 'float', int: 'integer', str: 'string',
