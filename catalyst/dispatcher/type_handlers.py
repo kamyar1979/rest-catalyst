@@ -12,6 +12,7 @@ from catalyst.constants import DEFAULT_CHARSET
 from catalyst.dispatcher import type_handler
 from catalyst.constants import SRID
 
+
 def adapt_field_type(column, value):
     """
     Adapt field type from Python types into RDBMS types
@@ -26,6 +27,7 @@ def adapt_field_type(column, value):
     elif type(column.type) == Binary:
         return base64.b64encode(value)
     return value
+
 
 def create_model(alchemy_model, **kwargs):
     """
@@ -44,6 +46,7 @@ def create_model(alchemy_model, **kwargs):
         setattr(alchemy_model, 'registered_date', datetime.now())
     return alchemy_model(**model)
 
+
 @type_handler
 def handle_byte_string(val: AnyStr) -> bytes:
     if type(val) != bytes:
@@ -59,8 +62,8 @@ def parse_tuple(val: Any, *, requested_type: type) -> tuple:
     else:
         val_seq = val
     if type(requested_type) is type(Tuple) and \
-            requested_type.__tuple_params__:
-        if requested_type.__tuple_use_ellipsis__:
+            hasattr(requested_type, '__tuple_params__'):
+        if hasattr(requested_type, '__tuple_use_ellipsis__'):
             t_types = requested_type.__tuple_params__ * len(val_seq)
         else:
             t_types = requested_type.__tuple_params__
@@ -77,6 +80,7 @@ def parse_tuple(val: Any, *, requested_type: type) -> tuple:
     else:
         return tuple(val_seq)
 
+
 @type_handler
 def parse_string(val: AnyStr) -> str:
     if type(val) is bytes:
@@ -84,20 +88,24 @@ def parse_string(val: AnyStr) -> str:
     else:
         return val
 
+
 @type_handler
 def parse_datetime(val: Any) -> datetime:
     value = str(val, encoding=DEFAULT_CHARSET) if type(val) is bytes else val
     return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+
 
 @type_handler
 def parse_date(val: Any) -> date:
     value = str(val, encoding=DEFAULT_CHARSET) if type(val) is bytes else val
     return datetime.strptime(value, '%Y-%m-%d')
 
+
 @type_handler
 def parse_time(val: Any) -> time:
     value = str(val, encoding=DEFAULT_CHARSET) if type(val) is bytes else val
     return time.fromisoformat(value)
+
 
 @type_handler
 def parse_object(data: Any, requested_type: type) -> object:
@@ -109,4 +117,3 @@ def parse_object(data: Any, requested_type: type) -> object:
         return create_model(requested_type, **params)
     elif is_dataclass(requested_type):
         return requested_type(**data)
-
