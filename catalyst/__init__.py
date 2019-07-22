@@ -2,13 +2,17 @@ import gettext
 import logging.config
 import os
 from importlib import import_module
+from typing import Optional
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET
 from catalyst.errors import ApiError
 from catalyst.extensions import serialize
 
-db = None
-app = None
+db : Optional[Flask] = None
+app : Optional[SQLAlchemy] = None
 
 
 def register_application(flask_application, database):

@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Type, Tuple, Set, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional
+from typing import Type, Tuple, Set, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional, List
 
 import geojson
 import rapidjson
@@ -7,6 +7,7 @@ from geoalchemy2 import WKBElement
 from shapely import wkb
 from sqlalchemy import inspect
 from toolz import compose
+from inspect import isclass
 
 
 def create_named_tuple_mapping(model: Mapping,
@@ -133,8 +134,17 @@ def create_dto(model: T,
         for k in mapping:
             try:
                 val: Any = mapping[k](model)
-                t: type = annotations[k].__args__[0] if hasattr(annotations[k], '__origin__') and \
-                                                        annotations[k].__origin__ == Union else annotations[k]
+                t: type = annotations[k]
+                if isclass(t):
+                    t = annotations[k]
+                else:
+                    if hasattr(t,'__origin__'):
+                        if t.__origin__ == Union:
+                            if hasattr(t, '__args__') and t.__args__:
+                                t = t.__args__[0]
+                        elif t.__origin__ in (Tuple, List):
+                            t = t.__origin__
+
                 if val is not None and type(val) != t:
                     if type(val) == WKBElement:
                         geom = wkb.loads(bytes(val.data))
