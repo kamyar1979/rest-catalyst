@@ -1,3 +1,4 @@
+from enum import Enum
 from operator import attrgetter
 from typing import Type, Tuple, Set, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional, List
 
@@ -136,20 +137,25 @@ def create_dto(model: T,
                 val: Any = mapping[k](model)
                 t: type = annotations[k]
                 if not isclass(t):
-                    if hasattr(t,'__origin__'):
+                    if hasattr(t, '__origin__'):
                         if t.__origin__ == Union:
                             if hasattr(t, '__args__') and t.__args__:
                                 t = t.__args__[0]
-                            if hasattr(t, '__origin__') and t.__origin__ == tuple:
+                            if hasattr(t, '__origin__') and t.__origin__ in tuple:
                                 t = t.__origin__
-                if val is not None and type(val) != t:
-                    if type(val) == WKBElement:
-                        geom = wkb.loads(bytes(val.data))
-                        yield k, rapidjson.loads(geojson.dumps(geojson.Feature(geom)))
+
+                if val is not None:
+                    if issubclass(t, Enum):
+                        yield k, t(val).value
                     else:
-                        yield k, t(val)
-                else:
-                    yield k, val
+                        if type(val) != t:
+                            if type(val) == WKBElement:
+                                geom = wkb.loads(bytes(val.data))
+                                yield k, rapidjson.loads(geojson.dumps(geojson.Feature(geom)))
+                            else:
+                                yield k, t(val)
+                        else:
+                            yield k, val
             except AttributeError:
                 pass
 

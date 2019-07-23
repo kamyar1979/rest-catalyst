@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import sessionmaker, Session, Query
 from sqlalchemy import func, Column
-from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type
+from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional
 from toolz import compose
 
 from catalyst.adapters import ODataQueryAdapter
@@ -53,8 +53,10 @@ def call_db_func(db_session: Session):
 
 def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_type: str = 'uri',
                        adapter_type=ODataQueryAdapter, *,
-                       query_options: Union[Callable[[Query], Query], Tuple[Callable[[Query], Query], ...]] = None,
-                       count_options: Union[Callable[[Query], Query], Tuple[Callable[[Query], Query], ...]] = None,
+                       query_options: Optional[Union[Callable[[Query], Query],
+                                                     Tuple[Callable[[Query], Query], ...]]] = None,
+                       count_options: Optional[Union[Callable[[Query], Query],
+                                                     Tuple[Callable[[Query], Query], ...]]] = None,
                        extra_columns: Tuple[Column, ...] = (),
                        expunge_after_all=True,
                        use_baked_queries=False,
