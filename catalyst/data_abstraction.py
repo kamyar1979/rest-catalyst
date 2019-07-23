@@ -60,7 +60,8 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
                        extra_columns: Tuple[Column, ...] = (),
                        expunge_after_all=True,
                        use_baked_queries=False,
-                       convenient=True) -> Tuple[List[T], int]:
+                       convenient=True,
+                       count_only=False) -> Union[Tuple[List[T], int], int]:
     """
     Parses OData input and returns list of model object
     :param data: OData input data, currently QueryString
@@ -94,9 +95,14 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
 
         if adapter.fields:
             adapter.fields += extra_columns
-        return (adapter.create_func(db_session, use_baked_queries=use_baked_queries, opt=options)(),
-                adapter.create_count_func(db_session, use_baked_queries=use_baked_queries,
-                                          opt=count_options)())
+
+        if count_only:
+            return adapter.create_count_func(db_session, use_baked_queries=use_baked_queries,
+                                          opt=count_options)()
+        else:
+            return (adapter.create_func(db_session, use_baked_queries=use_baked_queries, opt=options)(),
+                    adapter.create_count_func(db_session, use_baked_queries=use_baked_queries,
+                                              opt=count_options)())
     finally:
         if expunge_after_all:
             db_session.expunge_all()

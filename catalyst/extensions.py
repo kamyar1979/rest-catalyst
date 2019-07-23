@@ -4,7 +4,7 @@ from dataclasses import asdict, is_dataclass, dataclass
 from flask import request, make_response, g, Response
 import umsgpack
 from cbor import cbor
-from typing import Iterable, Any, get_type_hints
+from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
@@ -149,8 +149,9 @@ def serialize(result: object) -> Response:
         resp.headers[HeaderKeys.ContentType] = f'{MimeTypes.JSON}; charset={DEFAULT_CHARSET}'
         return resp
 
+T = TypeVar('T')
 
-def odata(count: int, items: Iterable):
+def odata(count: int, items: Iterable[Type[T]]) -> Dict[str, Union[int, Iterable[Type[T]]]]:
     return {ODATA_COUNT: count,
             ODATA_VALUE: items}
 

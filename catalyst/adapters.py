@@ -61,6 +61,7 @@ class QueryAdapter:
         self.start = kwargs.pop('start', 0)
         self.limit = kwargs.pop('limit', None)
         self.count = kwargs.pop('count', None)
+        self.count_only = False
         self.entity_map = {}
         self.column_map = {}
         self.get_inner_entities(cls)
@@ -684,3 +685,4 @@ class ODataQueryAdapter(QueryAdapter):
 
             if parts.get(PartConstants.Skip):
                 self.start = int(parts[PartConstants.Skip][0])
+
