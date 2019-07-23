@@ -141,7 +141,7 @@ def create_dto(model: T,
                         if t.__origin__ == Union:
                             if hasattr(t, '__args__') and t.__args__:
                                 t = t.__args__[0]
-                            if hasattr(t, '__origin__') and t.__origin__ in tuple:
+                            if hasattr(t, '__origin__') and t.__origin__ == tuple:
                                 t = t.__origin__
 
                 if val is not None:
