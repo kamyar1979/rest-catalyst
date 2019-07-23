@@ -468,6 +468,12 @@ class ODataQueryAdapter(QueryAdapter):
         def excluding(a, b: str):
             return not_(a.in_(b.replace(' ', '').split(',')))
 
+        def array_has(a, b):
+            return a.any(b)
+
+        def array_lacks(a, b):
+            return not_(a.all(b))
+
         op_map = {
             'eq': operator.eq,
             'ne': operator.ne,
@@ -484,6 +490,8 @@ class ODataQueryAdapter(QueryAdapter):
             'OR': or_,
             'in': containing,
             'out': excluding,
+            'has': array_has,
+            'lacks': array_lacks
         }
 
         func_map = {'substringof': lambda a, b: b.ilike('%{0}%'.format(a)),

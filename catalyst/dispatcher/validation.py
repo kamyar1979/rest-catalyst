@@ -25,12 +25,12 @@ dto_type_map = {bool: 'boolean', datetime: 'datetime',
                 list: 'list'}
 
 
-def register_type_mapping(**kwargs: Dict[type, str]):
+def register_type_mapping(**kwargs: str):
     global type_map
     type_map.update(kwargs)
 
 
-def register_dto_type_mapping(**kwargs: Dict[type, str]):
+def register_dto_type_mapping(**kwargs: str):
     global dto_type_map
     dto_type_map.update(kwargs)
 
