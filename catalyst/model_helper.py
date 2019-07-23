@@ -135,16 +135,13 @@ def create_dto(model: T,
             try:
                 val: Any = mapping[k](model)
                 t: type = annotations[k]
-                if isclass(t):
-                    t = annotations[k]
-                else:
+                if not isclass(t):
                     if hasattr(t,'__origin__'):
                         if t.__origin__ == Union:
                             if hasattr(t, '__args__') and t.__args__:
                                 t = t.__args__[0]
-                        elif t.__origin__ in (Tuple, List):
-                            t = t.__origin__
-
+                            if hasattr(t, '__origin__') and t.__origin__ == tuple:
+                                t = t.__origin__
                 if val is not None and type(val) != t:
                     if type(val) == WKBElement:
                         geom = wkb.loads(bytes(val.data))
