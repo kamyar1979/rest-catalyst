@@ -1,4 +1,4 @@
-setuptools==40.8.0
+setuptools>=40.8.0
 geojson==2.4.1
 pytz==2019.1
 SQLAlchemy_Utils==0.33.11
@@ -12,7 +12,7 @@ cbor==1.0.0
 pyparsing==2.4.0
 u_msgpack_python==2.5.1
 GeoAlchemy2==0.6.2
-Flask==1.0.3
+Flask>=1.0.3
 Shapely==1.6.4.post2
 ntplib==0.3.3
 rapidjson==1.0.0

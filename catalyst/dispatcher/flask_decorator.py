@@ -1,3 +1,4 @@
+from dataclasses import is_dataclass
 from typing import Union, Tuple
 import rapidjson
 import inspect
@@ -115,26 +116,30 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
 
                         elif i >= len(args):
 
-                            # region Fill attribute values using constructore
+                            # region Fill attribute values using constructor
                             result_type = func_args[k].annotation
-                            cons_params = inspect.signature(result_type).parameters
-                            obj = result_type({k:
-                                                   parse_value(data.get(k), cons_params[k].annotation)
-                                                   if cons_params[k].annotation else data.get(k)
-                                               for k in data if k in cons_params})
-                            # endregion
+                            if is_dataclass(result_type):
+                                cons_params = inspect.signature(result_type).parameters
+                                obj = result_type({k:
+                                                       parse_value(data.get(k), cons_params[k].annotation)
+                                                       if cons_params[k].annotation else data.get(k)
+                                                   for k in data if k in cons_params})
+                                # endregion
 
-                            # region Fill attribute values fusing setattr
-                            for k2 in data:
-                                if hasattr(obj, k2):
-                                    setattr(obj, k2, data[k2])
-                            # endregion
+                                # region Fill attribute values fusing setattr
+                                for k2 in data:
+                                    if hasattr(obj, k2):
+                                        setattr(obj, k2, data[k2])
+                                # endregion
 
-                            is_valid, validation_errors = validate_model(data, result_type)
-                            if is_valid:
-                                arg_values.append(obj)
-                            else:
-                                raise ValueError(rapidjson.dumps(validation_errors, ensure_ascii=False))
+                                is_valid, validation_errors = validate_model(data, result_type)
+                                if is_valid:
+                                    arg_values.append(obj)
+                                else:
+                                    raise ValueError(rapidjson.dumps(validation_errors, ensure_ascii=False))
+                        else:
+
+                            arg_values.append(func_args[k].annotation())
 
 
                     elif func_args[k].kind == inspect.Parameter.VAR_KEYWORD:
