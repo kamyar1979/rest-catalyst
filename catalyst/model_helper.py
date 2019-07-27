@@ -1,6 +1,6 @@
 from enum import Enum
 from operator import attrgetter
-from typing import Type, Tuple, Set, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional, List
+from typing import Type, Tuple, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional, NamedTuple
 
 import geojson
 import rapidjson
@@ -13,10 +13,10 @@ from inspect import isclass
 
 def create_named_tuple_mapping(model: Mapping,
                                dto_type: Type,
-                               include: Set[str] = None,
-                               exclude: Set[str] = None,
-                               prefix: str = None,
-                               **kwargs) -> Dict[str, Callable[[object], object]]:
+                               include: Optional[Tuple[str]] = None,
+                               exclude: Optional[Tuple[str]] = None,
+                               prefix: Optional[str] = None,
+                               **kwargs: Callable[[NamedTuple], Any]) -> Dict[str, Callable[[object], object]]:
     """
     Creates a mapping between entity model and DTO getting named tuple object
     :param model: ORM Model Type
@@ -59,8 +59,8 @@ U = TypeVar('U')
 
 def create_mapping(model: T,
                    dto_type: Type[U], *,
-                   include: Optional[Set[str]] = None,
-                   exclude: Optional[Set[str]] = None,
+                   include: Optional[Tuple[str,...]] = None,
+                   exclude: Optional[Tuple[str,...]] = None,
                    prefix: Optional[str] = None,
                    model_item_index: int = 0,
                    **kwargs: Callable[[Type[T]], Any]) -> Dict[str, Callable[[Type[T]], Any]]:
