@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import sessionmaker, Session, Query
 from sqlalchemy import func, Column
-from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional
+from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional, Generator
 from toolz import compose
 
 from catalyst.adapters import ODataQueryAdapter
@@ -18,7 +18,7 @@ T = TypeVar('T')
 
 
 @contextmanager
-def session_context(must_expunge=False, use_local_context=False) -> Session:
+def session_context(must_expunge=False, use_local_context=False) -> Generator[Session, None, None]:
     db_session: Session = db.session
     logger.debug('Initiated session %d', id(db_session))
     yield db_session
