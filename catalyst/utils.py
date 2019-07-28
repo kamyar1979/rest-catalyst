@@ -24,11 +24,13 @@ def get_current_time(tz=pytz.utc):
         return tz.fromutc(datetime.utcnow())
 
 
-def validate(model: object, *required_fields) -> Tuple[str, ...]:
+def validate(model: object, *required_fields: str, allow_blank=Tuple[str,...]) -> Tuple[str, ...]:
     """
     Validate DTO Model
     :param model: DTO Model
     :return: Validation errors list
     """
     return tuple(f'Field {field} is required' for field in required_fields
-                 if hasattr(model, field) and getattr(model, field) is None)
+                 if hasattr(model, field) and (
+                         getattr(model, field) is None or (getattr(model, field) == '' and field not in allow_blank)
+                 ))

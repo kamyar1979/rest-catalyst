@@ -97,10 +97,7 @@ def to_dict(obj: Any,
             elif t is date:
                 return JalaliDate(obj).isoformat()
             elif t is time:
-                if obj.tzinfo is None:
-                    return tz.fromutc(obj)
-                else:
-                    return obj
+                return obj.isoformat()
         else:
             return obj.isoformat()
     elif isinstance(obj, collections.Mapping):
