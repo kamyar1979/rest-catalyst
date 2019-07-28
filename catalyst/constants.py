@@ -50,6 +50,7 @@ class MimeTypes:
     MessagePack = 'application/msgpack'
     CBOR = 'application/cbor'
     URLEncoded = 'application/x-www-form-urlencoded'
+    Html = 'text/html'
 
 
 class SerializerFlags:

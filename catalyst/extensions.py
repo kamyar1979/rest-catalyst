@@ -2,8 +2,6 @@ import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
 
 from flask import request, make_response, g, Response
-import umsgpack
-from cbor import cbor
 from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type
 import collections
 from datetime import datetime, date, time
@@ -13,6 +11,9 @@ from catalyst.constants import RegExPatterns, MimeTypes, HeaderKeys, ODATA_COUNT
 from khayyam import JalaliDatetime, JalaliDate
 from pytz import country_timezones, timezone
 import re
+from . import serializers
+
+from catalyst.dispatcher import registered_serializers
 
 
 @dataclass
@@ -131,20 +132,25 @@ def serialize(result: object) -> Response:
     data = to_dict(result, flags,
                    locale=request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE)
 
-    accept_header = request.headers.get(HeaderKeys.Accept) or MimeTypes.JSON
-
-    if MimeTypes.MessagePack in accept_header:
-        resp = make_response(umsgpack.dumps(data))
-        resp.headers[HeaderKeys.ContentType] = MimeTypes.MessagePack
-        return resp
-    elif MimeTypes.CBOR in accept_header:
-        resp = make_response(cbor.dumps(data))
-        resp.headers[HeaderKeys.ContentType] = MimeTypes.CBOR
-        return resp
+    accept_header = request.headers.get(HeaderKeys.Accept).split(';')
+    if not accept_header:
+        accept_content_type, charset = MimeTypes.JSON, DEFAULT_CHARSET
+    elif len(accept_header) == 1:
+        accept_content_type, charset = accept_header[0], DEFAULT_CHARSET
     else:
+        accept_content_type, *_ = accept_header
+
+    # TODO: Try to get charset from accept header
+    resp = ''
+    for key in registered_serializers:
+        if key in accept_content_type:
+            resp = make_response(registered_serializers[key](data))
+            resp.headers[HeaderKeys.ContentType] = f'{key}; charset={DEFAULT_CHARSET}'
+
+    if not resp:
         resp = make_response(rapidjson.dumps(data, ensure_ascii=False, sort_keys=True))
         resp.headers[HeaderKeys.ContentType] = f'{MimeTypes.JSON}; charset={DEFAULT_CHARSET}'
-        return resp
+    return resp
 
 T = TypeVar('T')
 

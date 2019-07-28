@@ -1,10 +1,11 @@
-from typing import Callable, TypeVar, Type, Dict, Any, Union, Tuple
+from typing import Callable, TypeVar, Type, Dict, Any, Union, Tuple, AnyStr
 import inspect
 
 T = TypeVar('T')
 
 registered_types: Dict[Type, Callable[[Any], Any]] = {}
-registered_deserializers: Dict[str, Callable[[str], Any]] = {}
+registered_serializers: Dict[str, Callable[[Any], AnyStr]] = {}
+registered_deserializers: Dict[str, Callable[[AnyStr], Any]] = {}
 validator_func: Callable[[Any], bool]
 
 
@@ -43,6 +44,11 @@ def parse_value(val: Any, t: Type[T]) -> T:
             return val
         #endregion
 
+def serialization_handler(mime_type: str):
+    def decorate(func: Callable[[Any], AnyStr]):
+        registered_serializers[mime_type] = func
+
+    return decorate
 
 def deserialization_handler(mime_type: str):
     def decorate(func: Callable[[str], Any]):
