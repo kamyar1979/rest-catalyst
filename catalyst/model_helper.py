@@ -100,7 +100,7 @@ def create_mapping(model: T,
             if hasattr(result_object, attr_name):
                 result[attr_name] = kwargs[k]
         elif k not in model_empty_fields:
-            if k in relationships.keys():
+            if k in relationships.keys() and (exclude is not None and k not in exclude):
                 if getattr(model, k):
                     my_mapping = create_mapping(getattr(model, k), dto_type,
                                                 prefix=(prefix or '') + k + '_',
