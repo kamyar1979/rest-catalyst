@@ -63,7 +63,7 @@ def create_mapping(model: T,
                    exclude: Optional[Tuple[str,...]] = None,
                    prefix: Optional[str] = None,
                    model_item_index: int = 0,
-                   **kwargs: Callable[[Type[T]], Any]) -> Dict[str, Callable[[Type[T]], Any]]:
+                   **kwargs: Callable[[T], Any]) -> Dict[str, Callable[[T], Any]]:
     """
     Recursively creates mapping between ORm model objects and Python data classes
     :param model: input object, ORM model type, or Named Tuple
@@ -128,7 +128,7 @@ def create_mapping(model: T,
 
 def create_dto(model: T,
                dto_type: Type[U],
-               mapping: Dict[str, Callable[[object], object]]) -> U:
+               mapping: Dict[str, Callable[[T], Any]]) -> U:
     annotations = get_type_hints(dto_type)
 
     def create_result_dict():
