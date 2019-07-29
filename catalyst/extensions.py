@@ -1,3 +1,5 @@
+import inspect
+
 import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
 
@@ -48,9 +50,12 @@ def get_request_timezone() -> timezone:
     return g.timezone
 
 
-def to_dict(obj: Any,
+T = TypeVar('T')
+
+
+def to_dict(obj: T,
             flags: SerializationFlags = SerializationFlags.Default,
-            locale: str = DEFAULT_LOCALE) -> Any:
+            locale: str = DEFAULT_LOCALE) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
     Converts a Python object to dictionary, with recursion over the inner objects
     :param obj: Input Python object
@@ -108,10 +113,13 @@ def to_dict(obj: Any,
                 or flags.IncludeNulls}
 
     elif isinstance(obj, Iterable) or isinstance(obj, collections.Sequence):
-        return t(to_dict(item, flags=flags, locale=locale)
+
+        gen = (to_dict(item, flags=flags, locale=locale)
                  for item in obj
                  if item is not None
                  or flags.IncludeNulls)
+
+        return t(gen) if isinstance(obj, collections.Sequence) else tuple(gen)
     else:
         attribute_list = tuple(k for k in vars(obj))
         result = {}
@@ -152,9 +160,11 @@ def serialize(result: object) -> Response:
         resp.headers[HeaderKeys.ContentType] = f'{MimeTypes.JSON}; charset={DEFAULT_CHARSET}'
     return resp
 
-T = TypeVar('T')
 
-def odata(count: int, items: Iterable[Type[T]]) -> Dict[str, Union[int, Iterable[Type[T]]]]:
+U = TypeVar('U')
+
+
+def odata(count: int, items: Iterable[Type[U]]) -> Dict[str, Union[int, Iterable[Type[U]]]]:
     return {ODATA_COUNT: count,
             ODATA_VALUE: items}
 
