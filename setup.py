@@ -16,7 +16,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as r_file:
 
 setup(
     name="RestCatalyst",
-    version="1.1.7",
+    version="1.1.8",
     platforms="Any",
     description="Restful API Catalyst",
     author="Kamyar Inanloo",
@@ -29,6 +29,28 @@ setup(
     license="BSD",
     long_description=readme,
     python_requires=">=3.7",
+    install_requires=[
+        'setuptools',
+        'geojson',
+        'pytz',
+        'SQLAlchemy_Utils',
+        'Khayyam',
+        'Cerberus',
+        'toolz',
+        'python_rapidjson',
+        'SQLAlchemy',
+        'typing',
+        'cbor',
+        'pyparsing',
+        'u_msgpack_python',
+        'GeoAlchemy2',
+        'Flask',
+        'Shapely',
+        'ntplib',
+        'rapidjson',
+        'umsgpack',
+        'json2html'
+    ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
