@@ -1,7 +1,7 @@
 __author__ = 'kamyar'
 
 from sqlalchemy import func, or_, and_, not_, inspect, Column, bindparam
-from sqlalchemy.orm import joinedload, Query, RelationshipProperty, contains_eager, aliased, load_only
+from sqlalchemy.orm import joinedload, Query, RelationshipProperty, contains_eager, aliased, load_only, Session
 from sqlalchemy.ext import baked
 from abc import abstractmethod
 import re
@@ -9,12 +9,13 @@ import pyparsing as pp
 from urllib.parse import parse_qs, unquote_plus
 import functools
 from sqlalchemy_utils.functions import get_type
-from datetime import datetime
+from datetime import datetime, time
 import operator
 import collections
-from typing import Callable, NamedTuple, Tuple, Optional
+from typing import Callable, Tuple, Optional, Dict, List, Any, NamedTuple, Union
 from logging import Logger
 from sqlalchemy.sql.elements import ColumnElement, BinaryExpression
+from sqlalchemy.sql import Alias
 
 bakery = baked.bakery()
 
@@ -38,45 +39,45 @@ class ParsingException(Exception):
 class FilterExpression(NamedTuple):
     filter_list: Tuple[BinaryExpression, ...]
     join_list: Tuple[str, ...]
+    alias_map: Dict[str, Alias]
 
 
 class QueryAdapter:
 
-    def __init__(self, cls,
-                 fields=None,
-                 expand=None,
-                 join=None,
-                 filter_x=None,
-                 order_by=None,
-                 bound_params=False,
-                 extra_columns=(),
+    def __init__(self, cls: type,
+                 fields: Tuple[str, ...] = None,
+                 expand: Tuple[str, ...] = None,
+                 join: Tuple[str, ...] = None,
+                 filter_x: Tuple[str, ...] = None,
+                 order_by: Tuple[str, ...] = None,
+                 bound_params: bool = False,
+                 extra_columns: Tuple[Column] = (),
                  **kwargs):
 
-        self.cls = cls
-        self.fields = fields or ()
-        self.expand = expand or ()
-        self.join = join or ()
-        self.filter = filter_x or ()
-        self.order_by = order_by or ()
-        self.start = kwargs.pop('start', 0)
-        self.limit = kwargs.pop('limit', None)
-        self.count = kwargs.pop('count', None)
-        self.count_only = False
-        self.entity_map = {}
-        self.column_map = {}
+        self.cls: type = cls
+        self.fields: Tuple[str, ...] = fields or ()
+        self.expand: Tuple[str, ...] = expand or ()
+        self.join: Tuple[str, ...] = join or ()
+        self.filter: Tuple[str, ...] = filter_x or ()
+        self.order_by: Tuple[str, ...] = order_by or ()
+        self.start: int = kwargs.pop('start', 0)
+        self.limit: int = kwargs.pop('limit', None)
+        self.count: int = kwargs.pop('count', None)
+        self.count_only: bool = False
+        self.entity_map: Dict[str, int] = {}
+        self.column_map: Dict[str, str] = {}
         self.get_inner_entities(cls)
-        self.reserved_identifiers = {}
-        self.extra_columns = extra_columns
-        self.aliases = {}
+        self.reserved_identifiers: Dict[str, Any] = {}
+        self.extra_columns: Tuple[Column] = extra_columns
+        self.aliases: Dict[str, Alias] = {}
         self.logger: Optional[Logger] = None
         self.bound_params = bound_params
-        self.param_list = []
-        self.use_row_number = False
-        self.filter_aliases = {}
+        self.param_list: List[Any, ...] = []
+        self.use_row_number: bool = False
 
     def __hash__(self):
-        return id(self.cls) ^ hash(self.fields) ^ hash(self.expand) ^ hash(self.join) ^ hash(self.filter) ^ hash(
-            self.order_by) ^ hash(self.start) ^ hash(self.limit) ^ hash(self.count)
+        return id(self.cls) ^ hash(self.fields) ^ hash(self.expand) ^ hash(self.join) ^ hash(self.filter) ^ \
+               hash(self.order_by) ^ hash(self.start) ^ hash(self.limit) ^ hash(self.count)
 
     def set_reserved_identifier(self, **kwargs):
         self.reserved_identifiers.update(kwargs)
@@ -85,7 +86,7 @@ class QueryAdapter:
     def parse(self, **kwargs):
         pass
 
-    def get_inner_entities(self, entity: type, path: tuple = ()):
+    def get_inner_entities(self, entity: type, path: Tuple[str, ...] = ()):
         """
         Drills down the entity and collects all the related entities recursively.
         :param entity: SqlAlchemy entity type
@@ -131,7 +132,7 @@ class QueryAdapter:
             else:
                 return Column(field)
 
-    def create_count_func(self, session, use_baked_queries=False, opt=None) -> Callable:
+    def create_count_func(self, session: Session, use_baked_queries: bool = False, opt=None) -> Callable:
         """
         Creates counting function which may be run for getting query item count
         :param session: SqlAlchemy Session
@@ -145,7 +146,7 @@ class QueryAdapter:
             _query = self.create_count_query(session, opt)
         return _query.scalar
 
-    def create_count_query(self, session, opt=None) -> Query:
+    def create_count_query(self, session: Session, opt=None) -> Query:
         """
         Creates a count query.
         :param session: SqlAlchemy Session object
@@ -169,7 +170,7 @@ class QueryAdapter:
                 ).attrs[chain[-1]].innerjoin
 
             _query = functools.reduce(lambda q, j:
-                                      q.join(*j.split('/'),
+                                      q.join(self.aliases[j.replace('/', '_')], *j.split('/'),
                                              isouter=not inner_or_outer.get(j)),
                                       self.join, _query)
 
@@ -186,7 +187,7 @@ class QueryAdapter:
 
         return _query
 
-    def create_baked_count_query(self, session, opt=None) -> baked.Result:
+    def create_baked_count_query(self, session: Session, opt=None) -> baked.Result:
         """
         Creates a cached count query.
         :param session: SqlAlchemy Session object
@@ -206,7 +207,8 @@ class QueryAdapter:
                 ).attrs[chain[-1]].innerjoin
 
             _baked_query += lambda bq: functools.reduce(lambda q, j:
-                                                        q.join(*j.split('/')) if inner_or_outer.get(j) else q.outerjoin(
+                                                        q.join(self.aliases[j.replace('/', '_')],
+                                                               *j.split('/')) if inner_or_outer.get(j) else q.outerjoin(
                                                             *j.split('/')),
                                                         self.join, bq)
 
@@ -218,7 +220,7 @@ class QueryAdapter:
 
         return _baked_query(session).params(**{f'param_{k}': v for k, v in enumerate(self.param_list)})
 
-    def create_query(self, session, opt=None) -> Query:
+    def create_query(self, session: Session, opt=None) -> Query:
         """
         Creates SqlAlchemy query according to OData filters and joins
         :param session: SqlAlchemy Session object
@@ -251,7 +253,7 @@ class QueryAdapter:
                 ).attrs[chain[-1]].innerjoin
 
             _query = functools.reduce(lambda q, j:
-                                      q.join(*j.split('/'),
+                                      q.join(self.aliases[j.replace('/', '_')], *j.split('/'),
                                              isouter=not inner_or_outer.get(j)),
                                       self.join, _query)
 
@@ -329,13 +331,13 @@ class QueryAdapter:
 
         return _query
 
-    def create_func(self, session, use_baked_queries=False, opt=None) -> Callable:
+    def create_func(self, session: Session, use_baked_queries: bool = False, opt=None) -> Callable:
         if use_baked_queries:
             return self.create_baked_query(session, opt).all
         else:
             return self.create_query(session, opt).all
 
-    def create_baked_query(self, session, opt=None) -> baked.Result:
+    def create_baked_query(self, session: Session, opt=None) -> baked.Result:
         """
         Creates SqlAlchemy cached query according to OData filters and joins
         :param session: SqlAlchemy Session object
@@ -354,7 +356,7 @@ class QueryAdapter:
             _baked_query += lambda bq: bq.add_columns(*self.extra_columns)
 
         entities = (functools.reduce(lambda a, b: get_type(getattr(a, b)), x.split('/'), self.cls) for x in self.join)
-        self.filter += tuple(r for e in entities if hasattr(e, 'restrictions') for r in e.restrictions)
+        self.filter += tuple(r for e in entities if hasattr(e, 'restrictions') for r in getattr(e, 'restrictions'))
 
         if self.join:
             inner_or_outer = {}
@@ -365,7 +367,8 @@ class QueryAdapter:
                 ).attrs[chain[-1]].innerjoin
 
             _baked_query += lambda bq: functools.reduce(lambda q, j:
-                                                        q.join(*j.split('/')) if inner_or_outer.get(
+                                                        q.join(self.aliases[j.replace('/', '_')],
+                                                               *j.split('/')) if inner_or_outer.get(
                                                             j) else q.outerjoin(*j.split('/')),
                                                         self.join, bq)
 
@@ -455,7 +458,7 @@ class ODataQueryAdapter(QueryAdapter):
     def __init__(self, cls):
         super().__init__(cls)
 
-    def parse_filter(self, *filters: str, extra_columns=()) -> FilterExpression:
+    def parse_filter(self, *filters: Tuple[str, ...], extra_columns=()) -> FilterExpression:
 
         def date_part_func(part: str):
             def date_part_reverse(part_rev: str, val):
@@ -516,6 +519,8 @@ class ODataQueryAdapter(QueryAdapter):
                     'second': date_part_func('second'),
                     }
 
+        # region Parser Configuration
+
         operator_ = pp.Regex('|'.join(op_map.keys())).setName('operator')
         number = pp.Regex(r'[\d\.]+')
         identifier = pp.Regex(r'[a-z][\w\.]*')
@@ -535,18 +540,23 @@ class ODataQueryAdapter(QueryAdapter):
             (pp.CaselessLiteral("OR"), 2, pp.opAssoc.LEFT,),
         ])
 
+        # endregion
+
         try:
             if filters:
 
                 filter_list = []
                 join_list = []
+                alias_map = {}
                 exists_expressions = []
 
-                def parse_identifier(s):
+                def parse_identifier(s: Union[str, Tuple]) -> Any:
                     if type(s) is not str and isinstance(s, collections.Sequence):
                         return parse_single_expression(s)
-                    elif re.match(r"^'?\d+-\d+-\d+'?$", s):
+                    elif re.match(r"^'?\d{2,4}-\d{1,2}-\d{1,2}'?$", s):
                         return datetime.strptime(s.strip("'"), '%Y-%m-%d')
+                    elif re.match(r"^'?\d{1,2}:\d{1,2}(:\d{1,2})?'?", s):
+                        return time.fromisoformat(s.strip("'"))
                     elif re.match(r'^\d+$', s):
                         return int(s.strip("'"))
                     elif re.match(r'^[\d.]+$', s):
@@ -580,6 +590,8 @@ class ODataQueryAdapter(QueryAdapter):
                                         inner_parts[:-1],
                                         self.cls)
 
+                                    return getattr(entity, inner_parts[-1])
+
                                 else:
 
                                     entity = functools.reduce(
@@ -590,9 +602,10 @@ class ODataQueryAdapter(QueryAdapter):
                                     join_item = '/'.join(inner_parts[:-1])
                                     if join_item not in join_list:
                                         join_list.append(join_item)
-                                        self.filter_aliases[join_item] = aliased(entity)
+                                        alias_map[join_item] = aliased(entity,
+                                                                       name='_'.join(inner_parts[:-1]))
 
-                                return getattr(entity, inner_parts[-1:][0])
+                                    return getattr(alias_map[join_item], inner_parts[-1])
 
                             else:
                                 if re.match(r'^[A-Z_]+$', s):
@@ -601,7 +614,7 @@ class ODataQueryAdapter(QueryAdapter):
                                     else:
                                         raise NameError(f"Unrecognized identifier {s}")
                                 elif hasattr(self.cls, s):
-                                    return self.cls.__table__.columns[s]
+                                    return getattr(self.cls, '__table__').columns[s]
                                 elif s in extra_columns:
                                     return Column(s)
                                 else:
@@ -642,7 +655,9 @@ class ODataQueryAdapter(QueryAdapter):
                     parsed_expression = parse_single_expression(parsed_filter.asList())
                     filter_list.append(parsed_expression)
 
-                return FilterExpression(tuple(filter_list), tuple(join_list))
+                return FilterExpression(filter_list=tuple(filter_list),
+                                        join_list=tuple(join_list),
+                                        alias_map=alias_map)
 
         except pp.ParseException as ex:
             raise ParsingException(str(ex))
@@ -650,7 +665,7 @@ class ODataQueryAdapter(QueryAdapter):
         except AttributeError:
             raise
 
-    def parse(self, uri=None):
+    def parse(self, uri: str = None):
         """
         Parse OData Query String into Adapter properties, to be used when creating SqlAlchemy query afterwards.
         :param uri: Url of the RESTFul request to parse
@@ -662,8 +677,9 @@ class ODataQueryAdapter(QueryAdapter):
             parts = parse_qs(uri)
 
             if parts.get(PartConstants.Filter):
-                self.filter, self.join = self.parse_filter(*parts[PartConstants.Filter],
-                                                           extra_columns=tuple(x.name for x in self.extra_columns))
+                self.filter, self.join, self.aliases = self.parse_filter(*parts[PartConstants.Filter],
+                                                                         extra_columns=tuple(
+                                                                             x.name for x in self.extra_columns))
 
             if parts.get(PartConstants.OrderBy):
                 sort = parts[PartConstants.OrderBy][0].split(',') if len(parts[PartConstants.OrderBy]) == 1 else \
@@ -685,4 +701,3 @@ class ODataQueryAdapter(QueryAdapter):
 
             if parts.get(PartConstants.Skip):
                 self.start = int(parts[PartConstants.Skip][0])
-
