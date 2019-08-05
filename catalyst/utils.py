@@ -24,7 +24,7 @@ def get_current_time(tz=pytz.utc):
         return tz.fromutc(datetime.utcnow())
 
 
-def validate(model: object, *required_fields: str, allow_blank=Tuple[str,...]) -> Tuple[str, ...]:
+def validate(model: object, *required_fields: str, allow_blank: Tuple[str, ...] = ()) -> Tuple[str, ...]:
     """
     Validate DTO Model
     :param model: DTO Model
