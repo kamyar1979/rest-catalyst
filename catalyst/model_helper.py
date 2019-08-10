@@ -5,6 +5,7 @@ from typing import Type, Tuple, Dict, Callable, Union, Mapping, get_type_hints, 
 import geojson
 import rapidjson
 from geoalchemy2 import WKBElement
+from geoalchemy2.shape import to_shape
 from shapely import wkb
 from sqlalchemy import inspect
 from toolz import compose
