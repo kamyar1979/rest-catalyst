@@ -151,7 +151,7 @@ def create_dto(model: T,
                         if type(val) != t:
                             if type(val) == WKBElement:
                                 geom = wkb.loads(bytes(val.data))
-                                yield k, rapidjson.loads(geojson.dumps(geojson.Feature(geom)))
+                                yield k, rapidjson.loads(geojson.dumps(to_shape(val)))
                             else:
                                 yield k, t(val)
                         else:
