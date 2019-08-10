@@ -44,6 +44,7 @@ class FilterExpression(NamedTuple):
 
 Entity = TypeVar('Entity')
 
+
 class QueryAdapter:
 
     def __init__(self, cls: type,
@@ -173,7 +174,6 @@ class QueryAdapter:
 
                 self.aliases[item] = aliased(entity, name=item.replace('/', '_'))
 
-
         if self.join:
 
             for j in self.join:
@@ -192,7 +192,6 @@ class QueryAdapter:
                         return query, get_type(attr)
                     else:
                         return query.join(attr, isouter=not is_innerjoin), get_type(attr)
-
 
                 _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
 
@@ -268,7 +267,6 @@ class QueryAdapter:
 
         self.join += tuple(e for e in self.expand if e not in self.join)
 
-
         for item in self.join:
             if item not in self.aliases:
                 entity = functools.reduce(
@@ -277,7 +275,6 @@ class QueryAdapter:
                     self.cls)
 
                 self.aliases[item] = aliased(entity, name=item.replace('/', '_'))
-
 
         for j in self.join:
 
@@ -296,19 +293,15 @@ class QueryAdapter:
                 else:
                     return query.join(attr, isouter=not is_innerjoin), get_type(attr)
 
-
             _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
-
-
 
         if self.filter:
             _query = _query.filter(*self.filter)
 
-
         for x in self.expand:
 
             path = []
-            chain = j.split('/')
+            chain = x.split('/')
 
             def drill_down_path(option_entity: Tuple[Any, Entity], attr_name: str) -> Tuple[Any, Entity]:
                 option, entity = option_entity
@@ -330,7 +323,6 @@ class QueryAdapter:
 
             if _options:
                 _query = _query.options(_options)
-
 
         if self.order_by:
             for field, order in self.order_by:
