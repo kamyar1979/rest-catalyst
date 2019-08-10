@@ -12,7 +12,7 @@ from sqlalchemy_utils.functions import get_type
 from datetime import datetime, time
 import operator
 import collections
-from typing import Callable, Tuple, Optional, Dict, List, Any, NamedTuple, Union
+from typing import Callable, Tuple, Optional, Dict, List, Any, NamedTuple, Union, TypeVar
 from logging import Logger
 from sqlalchemy.sql.elements import ColumnElement, BinaryExpression
 from sqlalchemy.sql import Alias
@@ -41,6 +41,8 @@ class FilterExpression(NamedTuple):
     join_list: Tuple[str, ...]
     alias_map: Dict[str, Alias]
 
+
+Entity = TypeVar('Entity')
 
 class QueryAdapter:
 
@@ -121,9 +123,10 @@ class QueryAdapter:
         :return: SQlAlchemy Column for sorting query
         """
         if '.' in field:
+
             m = re.match(r'(.+)\.(.+)', field)
-            if m.group(1) in self.aliases:
-                return getattr(self.aliases[m.group(1)], m.group(2))
+            if m.group(1).replace('.', '/') in self.aliases:
+                return getattr(self.aliases[m.group(1).replace('.', '/')], m.group(2))
             else:
                 return Column(self.column_map[field])
         else:
@@ -161,18 +164,37 @@ class QueryAdapter:
 
         self.filter += tuple(r for e in entities.values() if hasattr(e, 'restrictions') for r in e.restrictions)
 
-        if self.join:
-            inner_or_outer = {}
-            for item in self.join:
-                chain = item.split('/')
-                inner_or_outer[item] = inspect(
-                    functools.reduce(lambda a, b: get_type(getattr(a, b)), chain[:-1], self.cls)
-                ).attrs[chain[-1]].innerjoin
+        for item in self.join:
+            if item not in self.aliases:
+                entity = functools.reduce(
+                    lambda c, p: get_type(getattr(c, p)),
+                    item.split('/'),
+                    self.cls)
 
-            _query = functools.reduce(lambda q, j:
-                                      q.join(self.aliases[j.replace('/', '_')], *j.split('/'),
-                                             isouter=not inner_or_outer.get(j)),
-                                      self.join, _query)
+                self.aliases[item] = aliased(entity, name=item.replace('/', '_'))
+
+
+        if self.join:
+
+            for j in self.join:
+
+                path = []
+                chain = j.split('/')
+
+                def drill_down_relationship(query_entity: Tuple[Query, Entity], attr_name: str) -> Tuple[Query, Entity]:
+                    query, entity = query_entity
+                    attr = getattr(entity, attr_name)
+                    path.append(attr_name)
+                    is_innerjoin = inspect(entity).attrs[attr_name].innerjoin
+                    if path == chain:
+                        return query.join(self.aliases[j], attr, isouter=not is_innerjoin), get_type(attr)
+                    elif '/'.join(path) in self.join:
+                        return query, get_type(attr)
+                    else:
+                        return query.join(attr, isouter=not is_innerjoin), get_type(attr)
+
+
+                _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
 
         if opt:
             _query = opt(_query).order_by(None)
@@ -244,61 +266,74 @@ class QueryAdapter:
 
         self.filter += tuple(r for e in entities.values() if hasattr(e, 'restrictions') for r in e.restrictions)
 
-        if self.join:
-            inner_or_outer = {}
-            for item in self.join:
-                chain = item.split('/')
-                inner_or_outer[item] = inspect(
-                    functools.reduce(lambda a, b: get_type(getattr(a, b)), chain[:-1], self.cls)
-                ).attrs[chain[-1]].innerjoin
+        self.join += tuple(e for e in self.expand if e not in self.join)
 
-            _query = functools.reduce(lambda q, j:
-                                      q.join(self.aliases[j.replace('/', '_')], *j.split('/'),
-                                             isouter=not inner_or_outer.get(j)),
-                                      self.join, _query)
+
+        for item in self.join:
+            if item not in self.aliases:
+                entity = functools.reduce(
+                    lambda c, p: get_type(getattr(c, p)),
+                    item.split('/'),
+                    self.cls)
+
+                self.aliases[item] = aliased(entity, name=item.replace('/', '_'))
+
+
+        for j in self.join:
+
+            path = []
+            chain = j.split('/')
+
+            def drill_down_relationship(query_entity: Tuple[Query, Entity], attr_name: str) -> Tuple[Query, Entity]:
+                query, entity = query_entity
+                attr = getattr(entity, attr_name)
+                path.append(attr_name)
+                is_innerjoin = inspect(entity).attrs[attr_name].innerjoin
+                if path == chain:
+                    return query.join(self.aliases[j], attr, isouter=not is_innerjoin), get_type(attr)
+                elif '/'.join(path) in self.join:
+                    return query, get_type(attr)
+                else:
+                    return query.join(attr, isouter=not is_innerjoin), get_type(attr)
+
+
+            _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
+
+
 
         if self.filter:
             _query = _query.filter(*self.filter)
 
-        eager = frozenset(self.expand) & frozenset(self.join)
-        self.expand = frozenset(self.expand) - frozenset(self.join)
 
-        if eager:
-            _query = _query.options(
-                *map(lambda x: functools.reduce(lambda a, b: a.contains_eager(b) if a else contains_eager(b),
-                                                x.split('/'), None), eager))
+        for x in self.expand:
 
-        if self.expand:
-            _query = _query.options(
-                *map(lambda x: functools.reduce(lambda a, b: a.joinedload(b) if a else joinedload(b),
-                                                x.split('/'), None), self.expand))
+            path = []
+            chain = j.split('/')
+
+            def drill_down_path(option_entity: Tuple[Any, Entity], attr_name: str) -> Tuple[Any, Entity]:
+                option, entity = option_entity
+                attr = getattr(entity, attr_name)
+                path.append(attr_name)
+
+                if option is None:
+                    if '/'.join(path) in self.expand:
+                        return contains_eager(attr, alias=self.aliases['/'.join(path)]), get_type(attr)
+                    else:
+                        return contains_eager(attr), get_type(attr)
+                else:
+                    if '/'.join(path) in self.expand:
+                        return option.contains_eager(attr, alias=self.aliases['/'.join(path)]), get_type(attr)
+                    else:
+                        return option.contains_eager(attr), get_type(attr)
+
+            _options, _ = functools.reduce(drill_down_path, chain, (None, self.cls))
+
+            if _options:
+                _query = _query.options(_options)
+
 
         if self.order_by:
-            entity = self.cls
             for field, order in self.order_by:
-
-                if '.' in field:
-
-                    m = re.match(r'(.+)\.(.+)', field)
-
-                    if m.group(1) not in self.aliases:
-
-                        for item in m.group(1).split('.'):
-
-                            cls = inspect(entity)
-                            attr = cls.attrs[item]
-                            entity = get_type(attr)
-
-                            if attr.innerjoin:
-                                aliased_entity = aliased(entity)
-                                self.aliases[m.group(1)] = aliased_entity
-                                _query = _query.join(aliased_entity, item).options(
-                                    contains_eager(item, alias=aliased_entity))
-                            else:
-                                aliased_entity = aliased(entity)
-                                self.aliases[m.group(1)] = aliased_entity
-                                _query = _query.outerjoin(aliased_entity, item).options(
-                                    contains_eager(item, alias=aliased_entity))
 
                 if order == "desc":
                     _query = _query.order_by(self.get_order_by_field(field).desc())
@@ -391,29 +426,6 @@ class QueryAdapter:
         if self.order_by:
             entity = self.cls
             for field, order in self.order_by:
-
-                if '.' in field:
-
-                    m = re.match(r'(.+)\.(.+)', field)
-
-                    if m.group(1) not in self.aliases:
-
-                        for item in m.group(1).split('.'):
-
-                            cls = inspect(entity)
-                            attr = cls.attrs[item]
-                            entity = get_type(attr)
-
-                            if attr.innerjoin:
-                                aliased_entity = aliased(entity)
-                                self.aliases[m.group(1)] = aliased_entity
-                                _baked_query += lambda bq: bq.join(aliased_entity, item).options(
-                                    contains_eager(item, alias=aliased_entity))
-                            else:
-                                aliased_entity = aliased(entity)
-                                self.aliases[m.group(1)] = aliased_entity
-                                _baked_query += lambda bq: bq.outerjoin(aliased_entity, item).options(
-                                    contains_eager(item, alias=aliased_entity))
 
                 if order == "desc":
                     _baked_query += lambda bq: bq.order_by(self.get_order_by_field(field).desc())
