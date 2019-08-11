@@ -1,3 +1,5 @@
+import struct
+import uuid
 from datetime import datetime
 from typing import Tuple
 
@@ -34,3 +36,24 @@ def validate(model: object, *required_fields: str, allow_blank: Tuple[str, ...] 
                  if hasattr(model, field) and (
                          getattr(model, field) is None or (getattr(model, field) == '' and field not in allow_blank)
                  ))
+
+def uuid_comb() -> uuid.UUID:
+    uuid_array=bytearray(uuid.uuid1().bytes)
+    base_date=datetime(1900,1,1)
+    now=datetime.now()
+    days=now-base_date
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    sec=int((datetime.now() - midnight).total_seconds()*300)
+
+    days_array=struct.pack('I',days.days)
+    sec_array=struct.pack('L',sec)
+
+    uuid_array[-6:-4]=days_array[:2:][::-1]
+    uuid_array[-4:]=sec_array[:4:][::-1]
+
+
+    return uuid.UUID(bytes=bytes(uuid_array))
+
+def compress_uuid(value:uuid.UUID) -> int:
+    b = struct.unpack('IIII', value.bytes)
+    return b[0] ^ b[1] ^ b[2] ^ b[3]
