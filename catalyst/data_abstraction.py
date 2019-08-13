@@ -32,6 +32,8 @@ def session_context(must_expunge=False,
         db_session.expunge_all()
     if use_local_context:
         db_session.commit()
+    if not use_scoped_session:
+        db_session.close()
     logger.debug('Closed session %d', id(db_session))
 
 
