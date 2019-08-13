@@ -1,3 +1,5 @@
+from sqlalchemy.ext.baked import BakedQuery
+
 __author__ = 'kamyar'
 
 from sqlalchemy import func, or_, and_, not_, inspect, Column, bindparam
@@ -160,11 +162,6 @@ class QueryAdapter:
         pk = inspect(self.cls).primary_key[0]
         _query = session.query(func.count(func.distinct(getattr(self.cls, pk.key))))
 
-        entities = {k: functools.reduce(lambda a, b: get_type(getattr(a, b)), k.split('/'), self.cls) for k in
-                    self.join}
-
-        self.filter += tuple(r for e in entities.values() if hasattr(e, 'restrictions') for r in e.restrictions)
-
         for item in self.join:
             if item not in self.aliases:
                 entity = functools.reduce(
@@ -174,26 +171,25 @@ class QueryAdapter:
 
                 self.aliases[item] = aliased(entity, name=item.replace('/', '_'))
 
-        if self.join:
+        for j in self.join:
 
-            for j in self.join:
+            path = []
+            chain = j.split('/')
 
-                path = []
-                chain = j.split('/')
+            def drill_down_relationship(query_entity: Tuple[Query, Entity], attr_name: str) -> Tuple[Query, Entity]:
+                query, entity = query_entity
+                attr = getattr(entity, attr_name)
+                path.append(attr_name)
+                path_string = '/'.join(path)
+                is_inner = inspect(entity).attrs[attr_name].innerjoin
+                if path == chain:
+                    return query.join(self.aliases[path_string], attr, isouter=not is_inner), get_type(attr)
+                elif '/'.join(path) in self.join:
+                    return query, get_type(attr)
+                else:
+                    return query.join(attr, isouter=not is_inner), get_type(attr)
 
-                def drill_down_relationship(query_entity: Tuple[Query, Entity], attr_name: str) -> Tuple[Query, Entity]:
-                    query, entity = query_entity
-                    attr = getattr(entity, attr_name)
-                    path.append(attr_name)
-                    is_innerjoin = inspect(entity).attrs[attr_name].innerjoin
-                    if path == chain:
-                        return query.join(self.aliases[j], attr, isouter=not is_innerjoin), get_type(attr)
-                    elif '/'.join(path) in self.join:
-                        return query, get_type(attr)
-                    else:
-                        return query.join(attr, isouter=not is_innerjoin), get_type(attr)
-
-                _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
+            _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
 
         if opt:
             _query = opt(_query).order_by(None)
@@ -219,25 +215,37 @@ class QueryAdapter:
 
         _baked_query = bakery(lambda s: s.query(func.count(func.distinct(getattr(self.cls, pk.key)))))
 
-        if self.join:
-            inner_or_outer = {}
-            for item in self.join:
-                chain = item.split('/')
-                inner_or_outer[item] = inspect(
-                    functools.reduce(lambda a, b: get_type(getattr(a, b)), chain[:-1], self.cls)
-                ).attrs[chain[-1]].innerjoin
+        entities = (functools.reduce(lambda a, b: get_type(getattr(a, b)), x.split('/'), self.cls) for x in self.join)
 
-            _baked_query += lambda bq: functools.reduce(lambda q, j:
-                                                        q.join(self.aliases[j.replace('/', '_')],
-                                                               *j.split('/')) if inner_or_outer.get(j) else q.outerjoin(
-                                                            *j.split('/')),
-                                                        self.join, bq)
+        for j in self.join:
 
-        if opt:
-            _baked_query += lambda bq: opt(bq).order_by(None)
+            path = []
+            chain = j.split('/')
+
+            def drill_down_relationship(query_entity: Tuple[BakedQuery, Entity],
+                                        attr_name: str) -> Tuple[BakedQuery, Entity]:
+
+                query, entity = query_entity
+                attr = getattr(entity, attr_name)
+                path.append(attr_name)
+                is_inner = inspect(entity).attrs[attr_name].innerjoin
+                path_string = '/'.join(path)
+                if path == chain:
+                    return query + (
+                        lambda bq: bq.join(self.aliases[path_string], attr, isouter=not is_inner)), get_type(attr)
+                if '/'.join(path) in self.join:
+                    return query, get_type(attr)
+                else:
+                    return query + (lambda bq: bq.join(attr, isouter=not is_inner)), get_type(attr)
+
+            _baked_query, _ = functools.reduce(drill_down_relationship, chain,
+                                               (_baked_query + (lambda bq: bq.reset_joinpoint()), self.cls))
 
         if self.filter:
             _baked_query += lambda bq: bq.filter(*self.filter)
+
+        if opt:
+            _baked_query += lambda bq: opt(bq)
 
         return _baked_query(session).params(**{f'param_{k}': v for k, v in enumerate(self.param_list)})
 
@@ -285,13 +293,14 @@ class QueryAdapter:
                 query, entity = query_entity
                 attr = getattr(entity, attr_name)
                 path.append(attr_name)
-                is_innerjoin = inspect(entity).attrs[attr_name].innerjoin
+                path_string = '/'.join(path)
+                is_inner = inspect(entity).attrs[attr_name].innerjoin
                 if path == chain:
-                    return query.join(self.aliases[j], attr, isouter=not is_innerjoin), get_type(attr)
+                    return query.join(self.aliases[path_string], attr, isouter=not is_inner), get_type(attr)
                 elif '/'.join(path) in self.join:
                     return query, get_type(attr)
                 else:
-                    return query.join(attr, isouter=not is_innerjoin), get_type(attr)
+                    return query.join(attr, isouter=not is_inner), get_type(attr)
 
             _query, _ = functools.reduce(drill_down_relationship, chain, (_query.reset_joinpoint(), self.cls))
 
@@ -308,14 +317,15 @@ class QueryAdapter:
                 attr = getattr(entity, attr_name)
                 path.append(attr_name)
 
+                path_string = '/'.join(path)
                 if option is None:
-                    if '/'.join(path) in self.expand:
-                        return contains_eager(attr, alias=self.aliases['/'.join(path)]), get_type(attr)
+                    if path_string in self.expand:
+                        return contains_eager(attr, alias=self.aliases[path_string]), get_type(attr)
                     else:
                         return contains_eager(attr), get_type(attr)
                 else:
-                    if '/'.join(path) in self.expand:
-                        return option.contains_eager(attr, alias=self.aliases['/'.join(path)]), get_type(attr)
+                    if path_string in self.expand:
+                        return option.contains_eager(attr, alias=self.aliases[path_string]), get_type(attr)
                     else:
                         return option.contains_eager(attr), get_type(attr)
 
@@ -324,6 +334,9 @@ class QueryAdapter:
             if _options:
                 _query = _query.options(_options)
 
+        if opt:
+            _query = opt(_query)
+
         if self.order_by:
             for field, order in self.order_by:
 
@@ -331,9 +344,6 @@ class QueryAdapter:
                     _query = _query.order_by(self.get_order_by_field(field).desc())
                 else:
                     _query = _query.order_by(self.get_order_by_field(field).asc())
-
-        if opt:
-            _query = opt(_query)
 
         if self.use_row_number:
             pk = inspect(self.cls).primary_key[0].key
@@ -385,47 +395,81 @@ class QueryAdapter:
         entities = (functools.reduce(lambda a, b: get_type(getattr(a, b)), x.split('/'), self.cls) for x in self.join)
         self.filter += tuple(r for e in entities if hasattr(e, 'restrictions') for r in getattr(e, 'restrictions'))
 
-        if self.join:
-            inner_or_outer = {}
-            for item in self.join:
-                chain = item.split('/')
-                inner_or_outer[item] = inspect(
-                    functools.reduce(lambda a, b: get_type(getattr(a, b)), chain[:-1], self.cls)
-                ).attrs[chain[-1]].innerjoin
+        self.join += tuple(e for e in self.expand if e not in self.join)
 
-            _baked_query += lambda bq: functools.reduce(lambda q, j:
-                                                        q.join(self.aliases[j.replace('/', '_')],
-                                                               *j.split('/')) if inner_or_outer.get(
-                                                            j) else q.outerjoin(*j.split('/')),
-                                                        self.join, bq)
+        for item in self.join:
+            if item not in self.aliases:
+                entity = functools.reduce(
+                    lambda c, p: get_type(getattr(c, p)),
+                    item.split('/'),
+                    self.cls)
+
+                self.aliases[item] = aliased(entity, name=item.replace('/', '_'))
+
+        for j in self.join:
+
+            path = []
+            chain = j.split('/')
+
+            def drill_down_relationship(query_entity: Tuple[BakedQuery, Entity],
+                                        attr_name: str) -> Tuple[BakedQuery, Entity]:
+
+                query, entity = query_entity
+                attr = getattr(entity, attr_name)
+                path.append(attr_name)
+                is_inner = inspect(entity).attrs[attr_name].innerjoin
+                path_string = '/'.join(path)
+                if path == chain:
+                    return query + (
+                        lambda bq: bq.join(self.aliases[path_string], attr, isouter=not is_inner)), get_type(attr)
+                if '/'.join(path) in self.join:
+                    return query, get_type(attr)
+                else:
+                    return query + (lambda bq: bq.join(attr, isouter=not is_inner)), get_type(attr)
+
+            _baked_query, _ = functools.reduce(drill_down_relationship, chain,
+                                               (_baked_query + (lambda bq: bq.reset_joinpoint()), self.cls))
 
         if self.filter:
             _baked_query += lambda bq: bq.filter(*self.filter)
 
-        eager = frozenset(self.expand) & frozenset(self.join)
-        self.expand = frozenset(self.expand) - frozenset(self.join)
+        for x in self.expand:
 
-        if eager:
-            _baked_query += lambda bq: bq.options(
-                *map(lambda x: functools.reduce(lambda a, b: a.contains_eager(b) if a else contains_eager(b),
-                                                x.split('/'), None), eager))
+            path = []
+            chain = x.split('/')
 
-        if self.expand:
-            _baked_query += lambda bq: bq.options(
-                *map(lambda x: functools.reduce(lambda a, b: a.joinedload(b) if a else joinedload(b),
-                                                x.split('/'), None), self.expand))
+            def drill_down_path(option_entity: Tuple[Any, Entity], attr_name: str) -> Tuple[Any, Entity]:
+                option, entity = option_entity
+                attr = getattr(entity, attr_name)
+                path.append(attr_name)
+
+                path_string = '/'.join(path)
+                if option is None:
+                    if path_string in self.expand:
+                        return contains_eager(attr, alias=self.aliases[path_string]), get_type(attr)
+                    else:
+                        return contains_eager(attr), get_type(attr)
+                else:
+                    if path_string in self.expand:
+                        return option.contains_eager(attr, alias=self.aliases[path_string]), get_type(attr)
+                    else:
+                        return option.contains_eager(attr), get_type(attr)
+
+            _options, _ = functools.reduce(drill_down_path, chain, (None, self.cls))
+
+            if _options:
+                _baked_query += lambda bq: bq.options(_options)
+
+        if opt:
+            _baked_query += lambda bq: opt(bq)
 
         if self.order_by:
-            entity = self.cls
             for field, order in self.order_by:
 
                 if order == "desc":
                     _baked_query += lambda bq: bq.order_by(self.get_order_by_field(field).desc())
                 else:
                     _baked_query += lambda bq: bq.order_by(self.get_order_by_field(field).asc())
-
-        if opt:
-            _baked_query += lambda bq: opt(bq)
 
         if self.use_row_number:
             pk = inspect(self.cls).primary_key[0].key
@@ -441,9 +485,6 @@ class QueryAdapter:
                 _baked_query += lambda bq: bq.offset(self.start)
             if self.limit:
                 _baked_query += lambda bq: bq.limit(self.limit)
-
-        # if self.logger:
-        #     self.logger.debug('%s with params: %s', _baked_query.statement, _baked_query.statement.compile().params)
 
         return _baked_query(session).params(**{f'param_{k}': v for k, v in enumerate(self.param_list)})
 

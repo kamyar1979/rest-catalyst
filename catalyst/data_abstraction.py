@@ -18,8 +18,14 @@ T = TypeVar('T')
 
 
 @contextmanager
-def session_context(must_expunge=False, use_local_context=False) -> Generator[Session, None, None]:
-    db_session: Session = db.session
+def session_context(must_expunge=False,
+                    use_local_context=False,
+                    use_scoped_session=True) -> Generator[Session, None, None]:
+    if use_scoped_session:
+        db_session: Session = db.session
+    else:
+        db_session: Session = session_factory()
+
     logger.debug('Initiated session %d', id(db_session))
     yield db_session
     if must_expunge:
