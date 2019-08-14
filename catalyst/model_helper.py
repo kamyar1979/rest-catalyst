@@ -1,5 +1,5 @@
 from enum import Enum
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from typing import Type, Tuple, Dict, Callable, Union, Mapping, get_type_hints, Any, TypeVar, Optional, NamedTuple
 
 import geojson
@@ -60,8 +60,8 @@ U = TypeVar('U')
 
 def create_mapping(model: T,
                    dto_type: Type[U], *,
-                   include: Optional[Tuple[str,...]] = None,
-                   exclude: Optional[Tuple[str,...]] = None,
+                   include: Optional[Tuple[str, ...]] = None,
+                   exclude: Optional[Tuple[str, ...]] = None,
                    prefix: Optional[str] = None,
                    model_item_index: int = 0,
                    **kwargs: Callable[[T], Any]) -> Dict[str, Callable[[T], Any]]:
@@ -81,8 +81,9 @@ def create_mapping(model: T,
         return {}
 
     if issubclass(type(model), Tuple):  # The type is named tuple
-        model_object_info = inspect(getattr(model, type(model[model_item_index]).__name__))
-        extractor = attrgetter(type(model[0]).__name__)
+        model_type_name = type(model[model_item_index]).__name__
+        model_object_info = inspect(getattr(model, model_type_name))
+        extractor = itemgetter(model_item_index)
     else:
         model_object_info = inspect(model)
         extractor = None
@@ -102,8 +103,9 @@ def create_mapping(model: T,
                 result[attr_name] = kwargs[k]
         elif k not in model_empty_fields:
             if k in relationships.keys() and (exclude is None or k not in exclude):
-                if hasattr(model, k) and getattr(model, k):
-                    my_mapping = create_mapping(getattr(model, k), dto_type,
+                model_proxy = extractor(model) if extractor else model
+                if hasattr(model_proxy, k) and getattr(model_proxy, k):
+                    my_mapping = create_mapping(getattr(model_proxy, k), dto_type,
                                                 prefix=(prefix or '') + k + '_',
                                                 include=include,
                                                 exclude=exclude)
