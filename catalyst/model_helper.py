@@ -84,16 +84,18 @@ def create_mapping(model: T,
         model_type_name = type(model[model_item_index]).__name__
         model_object_info = inspect(getattr(model, model_type_name))
         extractor = itemgetter(model_item_index)
+        extra_fields = frozenset(model._fields[1:])
     else:
         model_object_info = inspect(model)
         extractor = None
+        extra_fields = frozenset()
 
     model_empty_fields = model_object_info.unloaded  # Omit lazy-loaded fields
     attributes = model_object_info.attrs
     relationships = model_object_info.mapper.relationships  # Discover relationships for nested objects
     result_object = dto_type()
     result = {}
-    attr_list = set(item.key for item in attributes)
+    attr_list = frozenset(item.key for item in attributes) | extra_fields
 
     for k in attr_list:
         attr_name = (prefix or '') + k
@@ -116,7 +118,7 @@ def create_mapping(model: T,
                             result[key] = compose(my_mapping[key], attrgetter(k))
             elif (include is None or attr_name in include) and (exclude is None or attr_name not in exclude):
                 if hasattr(result_object, attr_name):
-                    if extractor:
+                    if extractor and attr_name not in extra_fields:
                         result[attr_name] = compose(attrgetter(k), extractor)
                     else:
                         result[attr_name] = attrgetter(k)
