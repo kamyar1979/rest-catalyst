@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.6.1
+-----
+
+* fix: Add extra fields when input is named tuple in model mapper
+* fix: pbr setup file fixed
 * chore: Add pbr files
 
 1.6.0
