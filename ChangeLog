@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+1.7.1
+-----
+
+* fix: to not create mapping for lists
+
+1.7.0
+-----
+
+* feat: add uuid tracking code. add data-class validation
+
 1.6.1
 -----
 
