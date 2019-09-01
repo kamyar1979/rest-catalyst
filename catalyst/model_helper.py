@@ -104,7 +104,7 @@ def create_mapping(model: T,
             if hasattr(result_object, attr_name):
                 result[attr_name] = kwargs[k]
         elif k not in model_empty_fields:
-            if k in relationships.keys() and (exclude is None or k not in exclude):
+            if k in relationships.keys() and (exclude is None or k not in exclude) and not relationships[k].uselist:
                 model_proxy = extractor(model) if extractor else model
                 if hasattr(model_proxy, k) and getattr(model_proxy, k):
                     my_mapping = create_mapping(getattr(model_proxy, k), dto_type,
