@@ -44,7 +44,7 @@ def call_db_func(db_session: Session):
     :return: Teh result of the RDBMS function
     """
 
-    class FunctionWrapper(object):
+    class FunctionWrapper:
 
         def __init__(self, func_name=None):
             if func_name:

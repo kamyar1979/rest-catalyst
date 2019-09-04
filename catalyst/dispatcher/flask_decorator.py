@@ -50,7 +50,7 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
                 if from_header:
                     for h in from_header:
                         if request.headers.get(h):
-                            data[h.replace('x-', '').replace('-', '_')] = request.headers[h]
+                            data[h.lower().replace('x-', '').replace('-', '_')] = request.headers[h]
                 content_type_header = request.headers.get(HeaderKeys.ContentType) or MimeTypes.JSON
                 # endregion
 
