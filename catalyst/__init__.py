@@ -2,7 +2,7 @@ import gettext
 import logging.config
 import os
 from importlib import import_module
-from typing import Optional
+from typing import Optional, Tuple
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +13,7 @@ from catalyst.extensions import serialize
 
 db : Optional[Flask] = None
 app : Optional[SQLAlchemy] = None
+default_directory_exclude: Tuple[str, ...] = ('.git', '.idea', '.docker', '__pycache__', 'node_modules')
 
 
 def register_application(flask_application, database):
@@ -21,13 +22,14 @@ def register_application(flask_application, database):
     db = database
 
 
-def register_handlers():
+def register_handlers(exclude_directories: Tuple[str, ...]=tuple()):
     """
     Walking through the directories recursively and registering handlers. When importing a handler,
     all its required modules including repository and model would be registered.
     :return:
     """
     for f, g, h in os.walk(os.getcwd()):
+        [g.remove(d) for d in list(g) if d in default_directory_exclude or d in exclude_directories]
         if 'handler.py' in h:
             import_module('.handler', os.path.relpath(f, os.getcwd()).replace('/', '.'))
 
