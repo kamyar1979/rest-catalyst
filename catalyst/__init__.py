@@ -11,9 +11,9 @@ from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET
 from catalyst.errors import ApiError
 from catalyst.extensions import serialize
 
-db : Optional[Flask] = None
-app : Optional[SQLAlchemy] = None
-default_directory_exclude: Tuple[str, ...] = ('.git', '.idea', '.docker', '__pycache__', 'node_modules')
+db: Optional[Flask] = None
+app: Optional[SQLAlchemy] = None
+default_directory_exclude: Tuple[str, ...] = ('__pycache__', 'node_modules')
 
 
 def register_application(flask_application, database):
@@ -22,14 +22,14 @@ def register_application(flask_application, database):
     db = database
 
 
-def register_handlers(exclude_directories: Tuple[str, ...]=tuple()):
+def register_handlers(exclude_directories: Tuple[str, ...] = ()):
     """
     Walking through the directories recursively and registering handlers. When importing a handler,
     all its required modules including repository and model would be registered.
     :return:
     """
     for f, g, h in os.walk(os.getcwd()):
-        [g.remove(d) for d in list(g) if d in default_directory_exclude or d in exclude_directories]
+        [g.remove(d) for d in g if d in (default_directory_exclude + exclude_directories) or d.startswith('.')]
         if 'handler.py' in h:
             import_module('.handler', os.path.relpath(f, os.getcwd()).replace('/', '.'))
 

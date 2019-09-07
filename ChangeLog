@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.7.2
+-----
+
+* fix: Minor fix in header parameters in dispatch
+* fix: version change
+
 1.7.1
 -----
 
