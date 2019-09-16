@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.7.3
+-----
+
+* fix: Omit some directories in handler walking
+* feat: exclude directories added due to better performance
+
 1.7.2
 -----
 

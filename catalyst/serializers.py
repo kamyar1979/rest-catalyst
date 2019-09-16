@@ -14,15 +14,15 @@ def serilize_MsgPack(data: Any) -> bytes:
 
 
 @serialization_handler(MimeTypes.JSON)
-def serilize_MsgPack(data: Any) -> str:
+def serilize_Json(data: Any) -> str:
     return rapidjson.dumps(data, ensure_ascii=False, sort_keys=True)
 
 
 @serialization_handler(MimeTypes.CBOR)
-def serilize_MsgPack(data: Any) -> bytes:
+def serilize_Cbor(data: Any) -> bytes:
     return cbor.dumps(data)
 
 
 @serialization_handler(MimeTypes.Html)
-def serilize_MsgPack(data: Any) -> str:
+def serilize_Html(data: Any) -> str:
     return json2html.convert(json = rapidjson.dumps(data, ensure_ascii=False, sort_keys=True))
