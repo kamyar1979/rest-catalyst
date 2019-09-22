@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.7.7
+-----
+
+* feat: add function for converting dictionary to data-class object
+
 1.7.6
 -----
 
