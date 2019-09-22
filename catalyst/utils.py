@@ -3,7 +3,7 @@ import struct
 import uuid
 from dataclasses import fields, dataclass
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, TypeVar, Dict, Any, Type
 
 import ntplib
 import pytz
@@ -72,4 +72,8 @@ def validation_patterns(**kwargs: str):
 
     return decorate
 
+T = TypeVar('T')
+
+def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
+    return cls(**{k.name: data.get(k.name) for k in fields(cls)})
 
