@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.7.5
+-----
+
+* chore: get\_by\_slug now can get query options
+
 1.7.4
 -----
 

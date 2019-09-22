@@ -57,7 +57,7 @@ def deserialization_handler(mime_type: str):
     return decorate
 
 
-def deserialize(data: str, mime_type: str) -> Any:
+def deserialize(data: AnyStr, mime_type: str) -> Any:
     if mime_type in registered_deserializers:
         return registered_deserializers[mime_type](data)
 
