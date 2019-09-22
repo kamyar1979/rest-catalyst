@@ -6,7 +6,6 @@ import geojson
 import rapidjson
 from geoalchemy2 import WKBElement
 from geoalchemy2.shape import to_shape
-from shapely import wkb
 from sqlalchemy import inspect
 from toolz import compose
 from inspect import isclass
@@ -155,7 +154,6 @@ def create_dto(model: T,
                     else:
                         if type(val) != t:
                             if type(val) == WKBElement:
-                                geom = wkb.loads(bytes(val.data))
                                 yield k, rapidjson.loads(geojson.dumps(to_shape(val)))
                             else:
                                 yield k, t(val)

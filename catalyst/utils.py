@@ -3,8 +3,7 @@ import struct
 import uuid
 from dataclasses import fields, dataclass
 from datetime import datetime
-from functools import wraps
-from typing import Tuple, Callable
+from typing import Tuple
 
 import ntplib
 import pytz
@@ -14,7 +13,7 @@ from . import app
 import base62
 
 
-def get_current_time(tz=pytz.utc):
+def get_current_time(tz=pytz.utc) -> datetime:
     """
     Get current time from time server (NTP) and optionally apply time zone
     :param tz: Time zone to be applied

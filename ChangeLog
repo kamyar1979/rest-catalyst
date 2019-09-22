@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.7.4
+-----
+
+* fix: Change serializer handler function names (they were duplicate)
+
 1.7.3
 -----
 

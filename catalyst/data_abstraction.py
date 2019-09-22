@@ -106,7 +106,7 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
 
         if count_only:
             return adapter.create_count_func(db_session, use_baked_queries=use_baked_queries,
-                                          opt=count_options)()
+                                             opt=count_options)()
         else:
             return (adapter.create_func(db_session, use_baked_queries=use_baked_queries, opt=options)(),
                     adapter.create_count_func(db_session, use_baked_queries=use_baked_queries,
@@ -116,12 +116,26 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
             db_session.expunge_all()
 
 
-def get_by_slug(cls: Type[T], session: Session, slug: str, natural_key: str = 'slug') -> T:
-    return session.query(cls).filter(getattr(cls, natural_key) == slug).one_or_none()
+def get_by_slug(cls: Type[T],
+                session: Session,
+                slug: str,
+                natural_key: str = 'slug',
+                query_options: Optional[Callable[[Query], Query]] = None) -> T:
+    if query_options:
+        return query_options(session.query(cls).filter(getattr(cls, natural_key) == slug)).one_or_none()
+    else:
+        return session.query(cls).filter(getattr(cls, natural_key) == slug).one_or_none()
 
 
-def check_slug_exists(cls: Type[T], session: Session, slug: str, natural_key: str = 'slug') -> bool:
-    return session.query(cls.query.filter(getattr(cls, natural_key) == slug).exists()).scalar()
+def check_slug_exists(cls: Type[T],
+                      session: Session,
+                      slug: str,
+                      natural_key: str = 'slug',
+                      query_options: Optional[Callable[[Query], Query]] = None) -> bool:
+    if query_options:
+        return query_options(session.query(cls.query.filter(getattr(cls, natural_key) == slug))).exists().scalar()
+    else:
+        return session.query(cls.query.filter(getattr(cls, natural_key) == slug).exists()).scalar()
 
 
 def create_schema():
