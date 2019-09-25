@@ -15,7 +15,6 @@ db: Optional[Flask] = None
 app: Optional[SQLAlchemy] = None
 default_directory_exclude: Tuple[str, ...] = ('__pycache__', 'node_modules')
 
-
 def register_application(flask_application, database):
     global app, db
     app = flask_application

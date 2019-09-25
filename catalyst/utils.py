@@ -13,17 +13,17 @@ from . import app
 import base62
 
 
-def get_current_time(tz=pytz.utc) -> datetime:
+def get_current_time(tz=pytz.utc, config: Dict[str, Any] = app.config) -> datetime:
     """
     Get current time from time server (NTP) and optionally apply time zone
     :param tz: Time zone to be applied
     :return: Python standard datetime
     """
     c = ntplib.NTPClient()
-    if ConfigKeys.NTPServer not in app.config:
+    if ConfigKeys.NTPServer not in config:
         return tz.fromutc(datetime.utcnow())
     try:
-        response = c.request(app.config[ConfigKeys.NTPServer], version=3)
+        response = c.request(config[ConfigKeys.NTPServer], version=3)
         return datetime.fromtimestamp(response.tx_time, tz)
     except:
         return tz.fromutc(datetime.utcnow())
@@ -64,7 +64,6 @@ def create_tracking_code(value: uuid.UUID) -> str:
 
 
 def validation_patterns(**kwargs: str):
-
     def decorate(cls: dataclass):
         cls.validate = lambda self: tuple(f'Field {f.name} pattern does not match.' for f in fields(cls)
                                           if f.name in kwargs and not re.match(kwargs[f.name], getattr(self, f.name)))
@@ -72,8 +71,9 @@ def validation_patterns(**kwargs: str):
 
     return decorate
 
+
 T = TypeVar('T')
 
-def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
-    return cls(**{k.name: data.get(k.name) for k in fields(cls)})
 
+def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
+    return cls(**{k.name: data.get(k.name) for k in fields(cls)}) if data else T()
