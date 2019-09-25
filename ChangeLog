@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.7.9
+-----
+
+* fix: NTP service configuration
+
 1.7.8
 -----
 
