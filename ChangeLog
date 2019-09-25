@@ -1,6 +1,9 @@
 CHANGES
 =======
 
+* fix: get\_current\_time now can get config
+* Chnagelog
+
 1.7.7
 -----
 
