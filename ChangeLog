@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+1.7.8
+-----
+
+* changelog
 * fix: get\_current\_time now can get config
 * Chnagelog
 

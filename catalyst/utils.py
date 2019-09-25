@@ -3,7 +3,7 @@ import struct
 import uuid
 from dataclasses import fields, dataclass
 from datetime import datetime
-from typing import Tuple, TypeVar, Dict, Any, Type
+from typing import Tuple, TypeVar, Dict, Any, Type, Optional
 
 import ntplib
 import pytz
@@ -13,13 +13,14 @@ from . import app
 import base62
 
 
-def get_current_time(tz=pytz.utc, config: Dict[str, Any] = app.config) -> datetime:
+def get_current_time(tz=pytz.utc, config: Optional[Dict[str, Any]] = None) -> datetime:
     """
     Get current time from time server (NTP) and optionally apply time zone
     :param tz: Time zone to be applied
     :return: Python standard datetime
     """
     c = ntplib.NTPClient()
+    config = config or app.config
     if ConfigKeys.NTPServer not in config:
         return tz.fromutc(datetime.utcnow())
     try:
