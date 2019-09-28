@@ -69,7 +69,8 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
                        expunge_after_all=True,
                        use_baked_queries=False,
                        convenient=True,
-                       count_only=False) -> Union[Tuple[List[T], int], int]:
+                       count_only=False,
+                       use_row_number=False) -> Union[Tuple[List[T], int], int]:
     """
     Parses OData input and returns list of model object
     :param data: OData input data, currently QueryString
@@ -87,6 +88,7 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
     try:
 
         adapter: ODataQueryAdapter = adapter_type(cls)
+        adapter.use_row_number = use_row_number
         adapter.extra_columns = extra_columns
         adapter.logger = logger
         adapter.parse(**{content_type: data})
