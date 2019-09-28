@@ -1,9 +1,15 @@
 CHANGES
 =======
 
+1.7.10
+------
+
+* fix: row\_number added to options in OData queries
+
 1.7.9
 -----
 
+* changelog
 * fix: NTP service configuration
 
 1.7.8
