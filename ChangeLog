@@ -1,14 +1,16 @@
 CHANGES
 =======
 
+1.7.11
+------
+
+* fix: DTO bug when getting data from dispatcher
+* changelog added
+
 1.7.10
 ------
 
 * fix: row\_number added to options in OData queries
-
-1.7.9
------
-
 * changelog
 * fix: NTP service configuration
 
