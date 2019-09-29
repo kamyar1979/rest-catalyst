@@ -120,7 +120,7 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
                             result_type = func_args[k].annotation
                             if is_dataclass(result_type):
                                 cons_params = inspect.signature(result_type).parameters
-                                obj = result_type({k:
+                                obj = result_type(**{k:
                                                        parse_value(data.get(k), cons_params[k].annotation)
                                                        if cons_params[k].annotation else data.get(k)
                                                    for k in data if k in cons_params})

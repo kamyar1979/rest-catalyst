@@ -17,6 +17,12 @@ def type_handler(func: Callable[[Any, Type], T]):
 def parse_value(val: Any, t: Type[T]) -> T:
     for k in registered_types:
 
+        if hasattr(t, '__origin__'):
+            if t.__origin__ == Union:
+                if hasattr(t, '__args__'):
+                    if t.__args__[1] == type(None):
+                        t = t.__args__[0]
+
         #region The type is Union/Optional or mix of them
         if hasattr(k, '__origin__'):
             if k.__origin__ == Union:
