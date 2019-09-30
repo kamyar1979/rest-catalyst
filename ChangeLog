@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.7.12
+------
+
+* fix: revert deserialization
+
 1.7.11
 ------
 
