@@ -27,8 +27,8 @@ class ConfigKeys:
     DefaultLocale = "DEFAULT_LOCALE"
     DefaultCharset = "DEFAULT_CHARSET"
     BaseUri = "BASE_URI"
-    RedisHost = "REDIS_HOST"
-    RedisPort = "REDIS_PORT"
+    ServiceDiscoveryUrl = "SERVICE_DISCOVERY_URL"
+    SwaggerUrl = "SWAGGER_URL"
 
 
 class RegExPatterns:
