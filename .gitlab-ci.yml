@@ -1,0 +1,12 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image: python:3.7.3-stretch
+  script:
+    - pip install twine
+    - python setup.py sdist bdist_wheel
+    - twine upload --repository-url ${NEXUS_HOST}/repository/pypi-internal/ --username ${NEXUS_USER} --password ${NEXUS_PASS} dist/*
+  only:
+    - master
