@@ -1,6 +1,17 @@
 CHANGES
 =======
 
+
+1.8.0
+-----
+
+* feat: Inter-service communications added
+* Update setup.cfg
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* changelog updated
+
 1.7.12
 ------
 
