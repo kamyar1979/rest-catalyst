@@ -1,6 +1,13 @@
+from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Tuple, Any, Union
+from typing import Tuple, Any, Union, Optional
 
+
+@dataclass
+class ErrorDTO:
+    Code: Optional[int] = None
+    Message: Optional[str] = None
+    Uri: Optional[str] = None
 
 class ApiError(Exception):
 
@@ -18,9 +25,5 @@ class ApiError(Exception):
         self.http_status_code = http_status_code
 
     def purified(self):
-        return {
-            'code': self.code,
-            'message': str(self),
-            'uri': self.uri
-        }
+        return ErrorDTO(Code=self.code, Message=str(self), Uri=self.uri)
 
