@@ -77,4 +77,4 @@ T = TypeVar('T')
 
 
 def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
-    return cls(**{k.name: data.get(k.name) for k in fields(cls)}) if data else T()
+    return cls(**{k.name: data.get(k.name) for k in fields(cls)}) if data else cls()
