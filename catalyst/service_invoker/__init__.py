@@ -12,5 +12,3 @@ async def read_swagger(url) -> str:
             assert response.status == 200
             return await response.text()
 
-
-

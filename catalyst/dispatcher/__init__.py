@@ -40,15 +40,22 @@ def parse_value(val: Any, t: Type[T]) -> T:
                     return registered_types[k](val, requested_type=t)
         #endregion
 
-        #region The type is simple Python type
+        # region The type is simple Python type
         if inspect.isclass(t):
-            if issubclass(t, k):
-                return registered_types[k](val, requested_type=t)
-            else:
-                return t(val)
-        else:
-            return val
-        #endregion
+            if type(val) == t:
+                return val
+            elif issubclass(t, k):
+                args = inspect.signature(registered_types[k])
+                if 'requested_type' in args.parameters:
+                    return registered_types[k](val, requested_type=t)
+                else:
+                    return registered_types[k](val)
+        # endregion
+
+    if inspect.isclass(t):
+        return t(val)
+    else:
+        return val
 
 def serialization_handler(mime_type: str):
     def decorate(func: Callable[[Any], AnyStr]):
