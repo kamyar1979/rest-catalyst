@@ -6,7 +6,7 @@ from catalyst.service_invoker.types import ParameterInfo, RestfulOperation
 operations: Dict[str, RestfulOperation] = {}
 base_url: str = ''
 
-async def read_swagger(url) -> Coroutine[Any, str , Any]:
+async def read_swagger(url) -> str:
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             assert response.status == 200
