@@ -2,7 +2,6 @@ from http import HTTPStatus
 from typing import Dict, Optional, NamedTuple, Any
 
 import aiohttp
-import rapidjson
 
 from catalyst import service_invoker
 from catalyst.constants import HeaderKeys
@@ -31,7 +30,7 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
 
         response = await session.request(operation.Method,
                                          url,
-                                         json=rapidjson.dumps(payload) if payload else '',
+                                         json=payload,
                                          headers=headers,
                                          params={p: kwargs.get(p) for p in operation.Parameters if
                                                  operation.Parameters[p].In == ParameterInputType.Query})
@@ -56,7 +55,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[
 
         response = session.request(operation.Method,
                                    url,
-                                   json=rapidjson.dumps(payload) if payload else '',
+                                   json=payload,
                                    headers=headers,
                                    params={p: kwargs.get(p) for p in operation.Parameters if
                                            operation.Parameters[p].In == ParameterInputType.Query})
