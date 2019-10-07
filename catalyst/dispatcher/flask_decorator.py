@@ -5,11 +5,13 @@ import inspect
 from http import HTTPStatus
 from urllib.parse import parse_qs
 
+from sqlalchemy.exc import DatabaseError
+
 from catalyst.dispatcher import parse_value, registered_deserializers, deserialize, validate_model
-from catalyst.errors import ApiError
+from catalyst.errors import ApiError, ErrorDTO
 from flask import request
 from functools import wraps
-from catalyst.constants import HeaderKeys, MimeTypes, DEFAULT_CHARSET
+from catalyst.constants import HeaderKeys, MimeTypes, DEFAULT_CHARSET, ErrorMessages
 from catalyst.extensions import serialize
 from . import validation, deserializers, type_handlers
 
@@ -121,9 +123,9 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
                             if is_dataclass(result_type):
                                 cons_params = inspect.signature(result_type).parameters
                                 obj = result_type(**{k:
-                                                       parse_value(data.get(k), cons_params[k].annotation)
-                                                       if cons_params[k].annotation else data.get(k)
-                                                   for k in data if k in cons_params})
+                                                         parse_value(data.get(k), cons_params[k].annotation)
+                                                         if cons_params[k].annotation else data.get(k)
+                                                     for k in data if k in cons_params})
                                 # endregion
 
                                 # region Fill attribute values fusing setattr
@@ -171,8 +173,12 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
 
                 return func(*arg_values, **kwargs)
 
+            except DatabaseError as e:
+                return serialize(ErrorDTO(Code=10503,
+                                          Message=ErrorMessages.ServiceUnavailable)), HTTPStatus.SERVICE_UNAVAILABLE
+
             except ValueError as e:
-                return serialize({"code": 10400, "message": str(e)}), HTTPStatus.BAD_REQUEST
+                return serialize(ErrorDTO(Code=10400, Message=str(e))), HTTPStatus.BAD_REQUEST
 
             except ApiError as e:
                 return serialize(e.purified()), e.http_status_code
