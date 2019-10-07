@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.8.7
+-----
+
+* fix: payload serialized twice for invoking foreign services
+
 1.8.6
 -----
 

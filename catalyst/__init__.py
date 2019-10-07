@@ -4,11 +4,13 @@ import os
 from importlib import import_module
 from typing import Optional, Tuple, Callable
 
+from catalyst.dispatcher.flask_decorator import handle_error
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 
-from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET
-from catalyst.errors import ApiError
+from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET, ErrorMessages
+from catalyst.errors import ApiError, ErrorDTO
 from catalyst.extensions import serialize
 
 db: Optional[SQLAlchemy] = None
@@ -38,11 +40,20 @@ def register_handlers(exclude_directories: Tuple[str, ...] = ()):
             import_module('.handler', os.path.relpath(f, os.getcwd()).replace('/', '.'))
 
     module = import_module('catalyst.data_abstraction')
-    module.create_schema()
+    try:
+        module.create_schema()
+    except :
+        pass
+    register_error_handlers()
 
 
 def register_error_handlers():
-    app.register_error_handler(ApiError, lambda e: (serialize(e.purified()), e.http_status_code))
+    app.register_error_handler(ApiError, handle_error)
+    app.register_error_handler(SQLAlchemyError,
+                               lambda e: serialize(ErrorDTO(Code=100500, Message=ErrorMessages.DatabaseError)))
+    app.register_error_handler(Exception,
+                               lambda e: serialize(ErrorDTO(Code=100500, Message=str(e))))
+
 
 
 def init_i18n():

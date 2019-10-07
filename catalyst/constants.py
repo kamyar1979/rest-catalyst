@@ -60,3 +60,4 @@ class SerializerFlags:
 
 class ErrorMessages:
     ServiceUnavailable = "Service temporarily unavailable. Please try again later."
+    DatabaseError = "Database error occurred."
