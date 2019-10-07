@@ -56,3 +56,7 @@ class MimeTypes:
 class SerializerFlags:
     IncludeNulls = 'IncludeNulls'
     ReplaceNullsWithEmpty = 'ReplaceNullsWithEmpty'
+
+
+class ErrorMessages:
+    ServiceUnavailable = "Service temporarily unavailable. Please try again later."

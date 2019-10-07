@@ -2,7 +2,7 @@ import gettext
 import logging.config
 import os
 from importlib import import_module
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -11,12 +11,17 @@ from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET
 from catalyst.errors import ApiError
 from catalyst.extensions import serialize
 
-db: Optional[Flask] = None
-app: Optional[SQLAlchemy] = None
+db: Optional[SQLAlchemy] = None
+app: Optional[Flask] = None
+reconnect: Callable[[], None]
+DefaultLocale: str = ''
+DefaultCharset: str = ''
 default_directory_exclude: Tuple[str, ...] = ('__pycache__', 'node_modules')
 
-def register_application(flask_application, database):
-    global app, db
+
+def register_application(flask_application: Flask,
+                         database: SQLAlchemy):
+    global app, db, reconnect
     app = flask_application
     db = database
 

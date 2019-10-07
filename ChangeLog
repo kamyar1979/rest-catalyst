@@ -1,10 +1,33 @@
 CHANGES
 =======
 
+* fix: SSL verification disabled for read swagger
+
+1.8.4
+-----
+
+* feat: Add error checking to inter-service communication
+
+1.8.3
+-----
+
+* fix: parse\_value for date\_time
+
+1.8.2
+-----
+
+* fix: bug in TypeVar
+
+1.8.1
+-----
+
+* fix: Type hint
 
 1.8.0
 -----
 
+* Changelog
+* Update .gitlab-ci.yml
 * feat: Inter-service communications added
 * Update setup.cfg
 * Update .gitlab-ci.yml

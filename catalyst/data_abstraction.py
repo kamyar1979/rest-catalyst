@@ -1,7 +1,7 @@
 import logging
 from contextlib import contextmanager
 
-from sqlalchemy.orm import sessionmaker, Session, Query
+from sqlalchemy.orm import Session, Query
 from sqlalchemy import func, Column
 from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional, Generator
 from toolz import compose
@@ -11,8 +11,6 @@ from catalyst.constants import ConfigKeys, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from . import db, app
 
 logger = logging.getLogger('orm')
-
-session_factory = sessionmaker(bind=db.engine)
 
 T = TypeVar('T')
 
@@ -24,6 +22,7 @@ def session_context(must_expunge=False,
     if use_scoped_session:
         db_session: Session = db.session
     else:
+        session_factory = db.session.session_factory
         db_session: Session = session_factory()
 
     logger.debug('Initiated session %d', id(db_session))
