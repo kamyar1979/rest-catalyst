@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+1.8.6
+-----
+
+* fix: Database error catch. Minot fix in NTP
+
+1.8.5
+-----
+
 * fix: SSL verification disabled for read swagger
 
 1.8.4
