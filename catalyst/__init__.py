@@ -51,8 +51,8 @@ def register_error_handlers():
     app.register_error_handler(ApiError, handle_error)
     app.register_error_handler(SQLAlchemyError,
                                lambda e: serialize(ErrorDTO(Code=100500, Message=ErrorMessages.DatabaseError)))
-    app.register_error_handler(Exception,
-                               lambda e: serialize(ErrorDTO(Code=100500, Message=str(e))))
+    # app.register_error_handler(Exception,
+    #                            lambda e: serialize(ErrorDTO(Code=100500, Message=str(e))))
 
 
 
