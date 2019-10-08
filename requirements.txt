@@ -22,3 +22,4 @@ pbr>=5.4.2
 base-62
 Flask-SQLAlchemy
 aiohttp
+pyyaml
