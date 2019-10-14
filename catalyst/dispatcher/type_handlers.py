@@ -1,7 +1,8 @@
 import base64
 from dataclasses import is_dataclass
 from datetime import datetime, date, time
-from typing import Any, AnyStr, Tuple
+from enum import Enum
+from typing import Any, AnyStr, Tuple, TypeVar, Type
 
 import sqlalchemy
 from geojson.geometry import Geometry
@@ -107,6 +108,15 @@ def parse_time(val: Any) -> time:
     return time.fromisoformat(value)
 
 
+E = TypeVar('E', Enum, type(None))
+@type_handler
+def parse_enum(val: Any, requested_type: Type[E]) -> Enum:
+    if any(val == item.value for item in requested_type):
+        return requested_type(val)
+    else:
+        raise ValueError('Not a valid enum value')
+
+
 @type_handler
 def parse_object(data: Any, requested_type: type) -> object:
     if hasattr(requested_type, '__table__'):
@@ -117,3 +127,5 @@ def parse_object(data: Any, requested_type: type) -> object:
         return create_model(requested_type, **params)
     elif is_dataclass(requested_type):
         return requested_type(**data)
+
+
