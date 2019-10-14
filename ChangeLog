@@ -1,24 +1,11 @@
 CHANGES
 =======
 
-1.8.8
------
-
+* fix: requirements fix
+* fix: pyyaml requirement added for swagger
 * fix: Error handling added
-
-1.8.7
------
-
 * fix: payload serialized twice for invoking foreign services
-
-1.8.6
------
-
 * fix: Database error catch. Minot fix in NTP
-
-1.8.5
------
-
 * fix: SSL verification disabled for read swagger
 
 1.8.4
