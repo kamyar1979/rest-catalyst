@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Dict, Optional, NamedTuple, Any
+from typing import Dict, Optional, NamedTuple, Any, Tuple
 
 import aiohttp
 
@@ -8,7 +8,7 @@ from catalyst.constants import HeaderKeys
 from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
 
-from catalyst.service_invoker.types import ParameterInputType, RestfulOperation
+from catalyst.service_invoker.types import ParameterInputType, RestfulOperation, ParameterInfo
 import requests
 
 
@@ -20,11 +20,20 @@ class HttpResult(NamedTuple):
 
 async def invoke_inter_service_operation(operation_id: str, *, payload: Optional[Any] = None, **kwargs) -> HttpResult:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
+
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
-           operation.Parameters[p].In == ParameterInputType.Path and p in operation.Parameters})
-    headers = {p: kwargs.get(p) for p in kwargs if
-               operation.Parameters[p].In == ParameterInputType.Header and p in operation.Parameters}
+           p in operation.Parameters and
+           operation.Parameters[p].In == ParameterInputType.Path and
+           p in operation.Parameters})
+
+    headers = {}
+    for item in operation.Parameters:
+        if operation.Parameters[item].In == ParameterInputType.Header:
+            var_name = item.replace('X-','').replace('-','_').lower()
+            if var_name in kwargs:
+                headers[item] = kwargs[var_name]
+
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
@@ -34,6 +43,7 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
                                          headers=headers,
                                          params={p: kwargs.get(p) for p in operation.Parameters if
                                                  operation.Parameters[p].In == ParameterInputType.Query})
+
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
             return HttpResult(response.status,
@@ -45,11 +55,19 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
 
 def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[Any] = None, **kwargs) -> HttpResult:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
+
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
-           operation.Parameters[p].In == ParameterInputType.Path and p in operation.Parameters})
-    headers = {p: kwargs.get(p) for p in kwargs if
-               operation.Parameters[p].In == ParameterInputType.Header and p in operation.Parameters}
+           p in operation.Parameters and
+           operation.Parameters[p].In == ParameterInputType.Path and
+           p in operation.Parameters})
+
+    headers = {}
+    for item in operation.Parameters:
+        if operation.Parameters[item].In == ParameterInputType.Header:
+            var_name = item.replace('X-','').replace('-','_').lower()
+            if var_name in kwargs:
+                headers[item] = kwargs[var_name]
 
     with requests.Session() as session:
 
@@ -59,6 +77,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[
                                    headers=headers,
                                    params={p: kwargs.get(p) for p in operation.Parameters if
                                            operation.Parameters[p].In == ParameterInputType.Query})
+
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
             return HttpResult(response.status_code,
