@@ -32,7 +32,7 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
         if operation.Parameters[item].In == ParameterInputType.Header:
             var_name = item.replace('X-','').replace('-','_').lower()
             if var_name in kwargs:
-                headers[item] = kwargs[var_name]
+                headers[item] = str(kwargs[var_name])
 
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
@@ -67,7 +67,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[
         if operation.Parameters[item].In == ParameterInputType.Header:
             var_name = item.replace('X-','').replace('-','_').lower()
             if var_name in kwargs:
-                headers[item] = kwargs[var_name]
+                headers[item] = str(kwargs[var_name])
 
     with requests.Session() as session:
 
