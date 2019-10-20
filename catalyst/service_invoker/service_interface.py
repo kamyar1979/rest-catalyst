@@ -48,9 +48,9 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
             return HttpResult(response.status,
                               deserialize(await response.content.read(), content_type),
-                              response.headers)
+                              dict(response.headers))
         else:
-            return HttpResult(response.status, await response.json(), response.headers)
+            return HttpResult(response.status, await response.json(), dict(response.headers))
 
 
 def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[Any] = None, **kwargs) -> HttpResult:

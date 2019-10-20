@@ -55,7 +55,8 @@ T = TypeVar('T')
 
 def to_dict(obj: T,
             flags: SerializationFlags = SerializationFlags.Default,
-            locale: str = DEFAULT_LOCALE) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
+            locale: str = DEFAULT_LOCALE,
+            depth: int = 3) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
     Converts a Python object to dictionary, with recursion over the inner objects
     :param obj: Input Python object
@@ -69,6 +70,9 @@ def to_dict(obj: T,
             return ''
         else:
             return
+
+    if depth == 0:
+        return
 
     m = re.match(RegExPatterns.Locale, locale)
     t = type(obj)
@@ -121,12 +125,9 @@ def to_dict(obj: T,
 
         return t(gen) if isinstance(obj, collections.Sequence) else tuple(gen)
     else:
-        attribute_list = tuple(k for k in vars(obj))
-        result = {}
-        for attr in attribute_list:
-            if not attr.startswith('_'):
-                result[attr] = to_dict(getattr(obj, attr), flags=flags, locale=locale)
-        return result
+        return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth-1)
+                for attr in vars(obj) if not attr.startswith('_')}
+
 
 
 def serialize(result: object) -> Response:
