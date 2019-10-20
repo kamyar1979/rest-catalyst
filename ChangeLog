@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+1.8.14
+------
+
+* feat: Header items automatically converted to string if not
+
+1.8.13
+------
+
+* fix: Header parameters in service invoker must omit x- and change casing automatically
+
 1.8.12
 ------
 
