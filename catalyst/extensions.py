@@ -118,16 +118,15 @@ def to_dict(obj: T,
 
     elif isinstance(obj, Iterable) or isinstance(obj, collections.Sequence):
 
-        gen = (to_dict(item, flags=flags, locale=locale)
-                 for item in obj
-                 if item is not None
-                 or flags.IncludeNulls)
+        gen = (to_dict(item, flags=flags, locale=locale, depth=depth - 1)
+               for item in obj
+               if item is not None
+               or flags.IncludeNulls)
 
         return t(gen) if isinstance(obj, collections.Sequence) else tuple(gen)
     else:
-        return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth-1)
+        return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth - 1)
                 for attr in vars(obj) if not attr.startswith('_')}
-
 
 
 def serialize(result: object) -> Response:
