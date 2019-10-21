@@ -111,7 +111,7 @@ def to_dict(obj: T,
         else:
             return obj.isoformat()
     elif isinstance(obj, collections.Mapping):
-        return {k: to_dict(obj[k], flags=flags, locale=locale)
+        return {k: to_dict(obj[k], flags=flags, locale=locale,  depth=depth - 1)
                 for k in obj
                 if obj[k] is not None
                 or flags.IncludeNulls}
