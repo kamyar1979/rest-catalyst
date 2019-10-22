@@ -85,7 +85,7 @@ def to_dict(obj: T,
         annotations = get_type_hints(type(obj))
         res = asdict(obj)
 
-        return {k: to_dict(res[k], flags=flags, locale=locale)
+        return {k: to_dict(res[k], flags=flags, locale=locale, depth=depth)
                 for k in res
                 if res[k] is not None
                 or flags.IncludeNulls
@@ -137,7 +137,8 @@ def serialize(result: object, depth: int = 5) -> Response:
     """
     flags = SerializationFlags(request.headers.get(HeaderKeys.Serialization))
 
-    data = to_dict(result, flags,
+    data = to_dict(result,
+                   flags=flags,
                    locale=request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE,
                    depth=depth)
 
