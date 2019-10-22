@@ -129,7 +129,7 @@ def to_dict(obj: T,
                 for attr in vars(obj) if not attr.startswith('_')}
 
 
-def serialize(result: object) -> Response:
+def serialize(result: object, depth: int = 5) -> Response:
     """
     Serialize Python object to string or byte-string data adding required headers
     :param result: Flask response
@@ -138,7 +138,8 @@ def serialize(result: object) -> Response:
     flags = SerializationFlags(request.headers.get(HeaderKeys.Serialization))
 
     data = to_dict(result, flags,
-                   locale=request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE)
+                   locale=request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE,
+                   depth=depth)
 
     accept_header = request.headers.get(HeaderKeys.Accept).split(';')
     if not accept_header:
