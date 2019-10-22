@@ -1,6 +1,22 @@
 CHANGES
 =======
 
+1.8.17
+------
+
+* feat: Depth can be added to serialize method
+
+1.8.16
+------
+
+* fix: Another depth fix
+* fix: to\_dict depth bug removed (previous reease feature)
+
+1.8.15
+------
+
+* feat: Converting object to dictionary function to get depth to prevent max recursion error
+
 1.8.14
 ------
 
