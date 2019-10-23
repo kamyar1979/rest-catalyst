@@ -18,7 +18,10 @@ class HttpResult(NamedTuple):
     Headers: Dict[str, str]
 
 
-async def invoke_inter_service_operation(operation_id: str, *, payload: Optional[Any] = None, **kwargs) -> HttpResult:
+async def invoke_inter_service_operation(operation_id: str, *,
+                                         payload: Optional[Any] = None,
+                                         token: Optional[str] = None,
+                                         **kwargs) -> HttpResult:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 
     url = service_invoker.base_url + operation.EndPoint.format(
@@ -34,6 +37,8 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
             if var_name in kwargs:
                 headers[item] = str(kwargs[var_name])
 
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
@@ -53,7 +58,10 @@ async def invoke_inter_service_operation(operation_id: str, *, payload: Optional
             return HttpResult(response.status, await response.json(), dict(response.headers))
 
 
-def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[Any] = None, **kwargs) -> HttpResult:
+def invoke_inter_service_operation_sync(operation_id: str, *,
+                                        payload: Optional[Any] = None,
+                                        token: Optional[str] = None,
+                                        **kwargs) -> HttpResult:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 
     url = service_invoker.base_url + operation.EndPoint.format(
@@ -68,6 +76,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *, payload: Optional[
             var_name = item.replace('X-','').replace('-','_').lower()
             if var_name in kwargs:
                 headers[item] = str(kwargs[var_name])
+
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
 
     with requests.Session() as session:
 
