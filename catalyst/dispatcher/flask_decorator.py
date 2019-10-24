@@ -120,6 +120,14 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
 
                             # region Fill attribute values using constructor
                             result_type = func_args[k].annotation
+
+                            # region The type is Union/Optional or mix of them
+                            if hasattr(result_type, '__origin__'):
+                                if result_type.__origin__ == Union:
+                                    if hasattr(result_type, '__args__'):
+                                        result_type = result_type.__args__[0]
+                            # endregion
+
                             if is_dataclass(result_type):
                                 cons_params = inspect.signature(result_type).parameters
                                 obj = result_type(**{k:
