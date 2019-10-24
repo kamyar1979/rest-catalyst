@@ -49,7 +49,7 @@ T = TypeVar('T')
 
 
 def to_dict(obj: T,
-            flags: SerializationFlags = SerializationFlags(),
+            flags: SerializationFlags = SerializationFlags(''),
             locale: str = DEFAULT_LOCALE,
             depth: int = 3) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
@@ -126,9 +126,9 @@ def to_dict(obj: T,
 
 def raw_serialize(data: Any, mime_type: str):
     if issubclass(type(data), Mapping):
-        return make_response(registered_serializers[mime_type](data))
+        return registered_serializers[mime_type](data)
     else:
-        return make_response(registered_serializers[mime_type](to_dict(data)))
+        return registered_serializers[mime_type](to_dict(data))
 
 def serialize(result: object, depth: int = 5) -> Response:
     """
