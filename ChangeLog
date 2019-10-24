@@ -1,9 +1,26 @@
 CHANGES
 =======
 
+1.9.2
+-----
+
+* refactor: Ignore timezone info due to Khayyam bug
+
+1.9.1
+-----
+
+* fix: raw\_serialize bug. to\_dict bug
+* fix: SerializationFlags fixed. feat: saw\_serialize added
+
+1.9.0
+-----
+
+* feat: Add auth token for service invocation
+
 1.8.17
 ------
 
+* fix: Some fixture in serialization depth
 * feat: Depth can be added to serialize method
 
 1.8.16

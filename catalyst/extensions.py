@@ -98,9 +98,7 @@ def to_dict(obj: T,
                 if obj.tzinfo is None:
                     return JalaliDatetime(tz.fromutc(obj)).isoformat()
                 else:
-                    # TODO: Khayyam is buggy here, we have to remove timezone
-                    # return JalaliDatetime(obj).isoformat()
-                    return JalaliDatetime(tz.fromutc(obj)).isoformat()
+                    return JalaliDatetime(obj).isoformat()
             elif t is date:
                 return JalaliDate(obj).isoformat()
             elif t is time:
