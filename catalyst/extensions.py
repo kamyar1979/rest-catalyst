@@ -98,7 +98,7 @@ def to_dict(obj: T,
                 if obj.tzinfo is None:
                     return JalaliDatetime(tz.fromutc(obj)).isoformat()
                 else:
-                    return JalaliDatetime(obj).isoformat()
+                    return JalaliDatetime(obj.astimezone(tz)).isoformat()
             elif t is date:
                 return JalaliDate(obj).isoformat()
             elif t is time:
