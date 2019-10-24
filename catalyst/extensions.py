@@ -4,7 +4,7 @@ import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
 
 from flask import request, make_response, g, Response
-from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type
+from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Mapping
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
@@ -31,11 +31,6 @@ class SerializationFlags:
             self.IncludeNulls = SerializerFlags.IncludeNulls in flags
             self.ReplaceNoneWithEmptyString = SerializerFlags.ReplaceNullsWithEmpty in flags
 
-    @property
-    @classmethod
-    def Default(cls):
-        return cls.__new__(cls).__init__('')
-
 
 def get_request_timezone() -> timezone:
     if 'timezone' not in g:
@@ -54,7 +49,7 @@ T = TypeVar('T')
 
 
 def to_dict(obj: T,
-            flags: SerializationFlags = SerializationFlags.Default,
+            flags: SerializationFlags = SerializationFlags(),
             locale: str = DEFAULT_LOCALE,
             depth: int = 3) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
@@ -128,6 +123,12 @@ def to_dict(obj: T,
         return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth - 1)
                 for attr in vars(obj) if not attr.startswith('_')}
 
+
+def raw_serialize(data: Any, mime_type: str):
+    if issubclass(type(data), Mapping):
+        return make_response(registered_serializers[mime_type](data))
+    else:
+        return make_response(registered_serializers[mime_type](to_dict(data)))
 
 def serialize(result: object, depth: int = 5) -> Response:
     """
