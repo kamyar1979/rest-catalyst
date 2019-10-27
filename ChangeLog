@@ -1,9 +1,21 @@
 CHANGES
 =======
 
+1.9.4
+-----
+
+* fix: Non optional UUID fixed
+
+1.9.3
+-----
+
+* fix: Fix Optional type in DTO input
+
 1.9.2
 -----
 
+* fix: TimeZone bug workaround
+* fix: Patched TimeZone bug in Khayyam workaround
 * refactor: Ignore timezone info due to Khayyam bug
 
 1.9.1

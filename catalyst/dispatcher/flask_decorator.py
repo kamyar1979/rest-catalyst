@@ -181,15 +181,8 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
 
                 return func(*arg_values, **kwargs)
 
-            except DatabaseError as e:
-                return serialize(ErrorDTO(Code=10503,
-                                          Message=ErrorMessages.ServiceUnavailable)), HTTPStatus.SERVICE_UNAVAILABLE
-
             except ValueError as e:
                 return serialize(ErrorDTO(Code=10400, Message=str(e))), HTTPStatus.BAD_REQUEST
-
-            except ApiError as e:
-                return serialize(e.purified()), e.http_status_code
 
         wrapper.__name__ = func.__name__
         wrapper.__signature__ = sig
@@ -198,6 +191,3 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
 
     return decorate
 
-
-def handle_error(e: ApiError):
-    return serialize(e.purified()), e.http_status_code
