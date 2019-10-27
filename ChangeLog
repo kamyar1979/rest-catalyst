@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+1.9.6
+-----
+
+* fix: Deserializers imported by default
+
+1.9.5
+-----
+
+* fix: Error handling revised. Session rollback automatically
+
 1.9.4
 -----
 
