@@ -44,7 +44,7 @@ def parse_value(val: Any, t: Type[T]) -> T:
         if inspect.isclass(t):
             if type(val) == t:
                 return val
-            elif issubclass(t, k):
+            elif issubclass(t, k) and k is not object:
                 args = inspect.signature(registered_types[k])
                 if 'requested_type' in args.parameters:
                     return registered_types[k](val, requested_type=t)
