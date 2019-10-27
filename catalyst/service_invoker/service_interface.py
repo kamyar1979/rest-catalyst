@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Dict, Optional, NamedTuple, Any, Tuple
+from typing import Dict, Optional, NamedTuple, Any
 
 import aiohttp
 
@@ -7,8 +7,9 @@ from catalyst import service_invoker
 from catalyst.constants import HeaderKeys
 from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
+from catalyst.dispatcher import deserializers
 
-from catalyst.service_invoker.types import ParameterInputType, RestfulOperation, ParameterInfo
+from catalyst.service_invoker.types import ParameterInputType, RestfulOperation
 import requests
 
 
@@ -33,7 +34,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     headers = {}
     for item in operation.Parameters:
         if operation.Parameters[item].In == ParameterInputType.Header:
-            var_name = item.replace('X-','').replace('-','_').lower()
+            var_name = item.replace('X-', '').replace('-', '_').lower()
             if var_name in kwargs:
                 headers[item] = str(kwargs[var_name])
 
@@ -73,7 +74,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     headers = {}
     for item in operation.Parameters:
         if operation.Parameters[item].In == ParameterInputType.Header:
-            var_name = item.replace('X-','').replace('-','_').lower()
+            var_name = item.replace('X-', '').replace('-', '_').lower()
             if var_name in kwargs:
                 headers[item] = str(kwargs[var_name])
 
