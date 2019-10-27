@@ -82,6 +82,6 @@ def parse_enum(val: Any, requested_type: Type[E]) -> Enum:
         raise ValueError('Not a valid enum value')
 
 
-
+@type_handler
 def parse_geometry(val: Any) -> BaseGeometry:
     return shape(geojson.loads(rapidjson.dumps(val)))
