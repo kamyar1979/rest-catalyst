@@ -25,6 +25,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          **kwargs) -> HttpResult:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 
+    if not operation:
+        raise InterServiceError(f"There is no operation with id f{operation_id}")
+
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
            p in operation.Parameters and
@@ -64,6 +67,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         token: Optional[str] = None,
                                         **kwargs) -> HttpResult:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
+
+    if not operation:
+        raise InterServiceError(f"There is no operation with id f{operation_id}")
 
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
