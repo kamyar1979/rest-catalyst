@@ -53,10 +53,14 @@ def register_handlers(exclude_directories: Tuple[str, ...] = ()):
 
 def database_error_handler(e):
     logger.error(e)
+    if db.session.is_active:
+        db.session.rollback()
     return serialize(ErrorDTO(Code=100500, Message=ErrorMessages.DatabaseError))
 
 
 def handle_error(e: ApiError):
+    if db.session.is_active:
+        db.session.rollback()
     return serialize(e.purified()), e.http_status_code
 
 
@@ -86,9 +90,3 @@ def init_i18n():
 def init_logging():
     logging.config.fileConfig(app.config[ConfigKeys.LoggingConfig])
 
-
-@app.teardown_request
-def session_clear(exception=None):
-    db.session.remove()
-    if exception and db.session.is_active:
-        db.session.rollback()
