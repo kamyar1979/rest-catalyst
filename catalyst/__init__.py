@@ -44,11 +44,11 @@ def register_handlers(exclude_directories: Tuple[str, ...] = ()):
             import_module('.handler', os.path.relpath(f, os.getcwd()).replace('/', '.'))
 
     module = import_module('catalyst.data_abstraction')
-    try:
-        module.create_schema()
-    except  Exception as e:
-        logger.error(e)
-    register_error_handlers()
+
+    module.create_schema()
+
+    if app.config['ENV'].casefold() != 'Development'.casefold():
+        register_error_handlers()
 
 
 def database_error_handler(e):
@@ -65,6 +65,7 @@ def handle_error(e: ApiError):
 
 
 def register_error_handlers():
+
     app.register_error_handler(ApiError, handle_error)
     app.register_error_handler(SQLAlchemyError,
                                lambda e: serialize(ErrorDTO(Code=100500, Message=ErrorMessages.DatabaseError)))

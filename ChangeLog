@@ -1,6 +1,32 @@
 CHANGES
 =======
 
+1.11.0
+------
+
+* feat: Add typed result to invoker. Fix Odata param
+
+1.10.2
+------
+
+* fix: Raise error when swagger operation not found
+
+1.10.1
+------
+
+* fix: Revert teardown
+* fix: Rollback transaction in case of request teardown
+
+1.10.0
+------
+
+* feat: Type Handler added for Shapely types
+
+1.9.7
+-----
+
+* fix: Geometry types fixed
+
 1.9.6
 -----
 
