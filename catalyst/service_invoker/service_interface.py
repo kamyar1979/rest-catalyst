@@ -31,6 +31,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          payload: Optional[Any] = None,
                                          token: Optional[str] = None,
                                          result_type: Optional[Type[T]] = None,
+                                         locale='en-US',
+                                         format='application/json',
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 
@@ -57,6 +59,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     if token:
         headers['Authorization'] = f'Bearer {token}'
+
+    headers.update({'Accept-Language': locale, 'Accept': format})
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
@@ -86,6 +90,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         payload: Optional[Any] = None,
                                         token: Optional[str] = None,
                                         result_type: Optional[Type[T]] = None,
+                                        locale='en-US',
+                                        format='application/json',
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 
@@ -112,6 +118,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     if token:
         headers['Authorization'] = f'Bearer {token}'
+
+    headers.update({'Accept-Language': locale, 'Accept': format})
 
     with requests.Session() as session:
 
