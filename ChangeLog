@@ -1,6 +1,8 @@
 CHANGES
 =======
 
+* fix: Error handling omitted in development mode
+
 1.11.0
 ------
 
