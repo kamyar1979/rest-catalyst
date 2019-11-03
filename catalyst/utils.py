@@ -1,16 +1,19 @@
+import inspect
 import re
 import struct
 import uuid
-from dataclasses import fields, dataclass
+from dataclasses import fields, dataclass, is_dataclass
 from datetime import datetime
 from typing import Tuple, TypeVar, Dict, Any, Type, Optional
 
 import ntplib
 import pytz
+from catalyst.dispatcher import parse_value
 
 from catalyst.constants import ConfigKeys
 from . import app
 import base62
+from catalyst.dispatcher import type_handlers
 
 
 def get_current_time(tz=pytz.utc, config: Optional[Dict[str, Any]] = None) -> datetime:
@@ -77,4 +80,9 @@ T = TypeVar('T')
 
 
 def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
-    return cls(**{k.name: data.get(k.name) for k in fields(cls)}) if data else cls()
+    if is_dataclass(cls):
+        cons_params = inspect.signature(cls).parameters
+        return cls(**{k:
+                          parse_value(data.get(k), cons_params[k].annotation)
+                          if cons_params[k].annotation else data.get(k)
+                      for k in data if k in cons_params})
