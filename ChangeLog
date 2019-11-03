@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+1.11.2
+------
+
+* feat: Add locale and format to service invoker
+
+1.11.1
+------
+
 * fix: Error handling omitted in development mode
 
 1.11.0
