@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.11.3
+------
+
+* fix: dict\_to\_object revised for parse\_value
+
 1.11.2
 ------
 
