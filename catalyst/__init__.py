@@ -47,7 +47,7 @@ def register_handlers(exclude_directories: Tuple[str, ...] = ()):
 
     module.create_schema()
 
-    if app.config['ENV'].casefold() != 'Development'.casefold():
+    if app.config['FLASK_ENV'].casefold() != 'Development'.casefold():
         register_error_handlers()
 
 
