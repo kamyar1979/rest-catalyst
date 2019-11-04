@@ -47,8 +47,7 @@ def register_handlers(exclude_directories: Tuple[str, ...] = ()):
 
     module.create_schema()
 
-    if app.config['FLASK_ENV'].casefold() != 'Development'.casefold():
-        register_error_handlers()
+    register_error_handlers()
 
 
 def database_error_handler(e):
@@ -67,8 +66,9 @@ def handle_error(e: ApiError):
 def register_error_handlers():
 
     app.register_error_handler(ApiError, handle_error)
-    app.register_error_handler(SQLAlchemyError,
-                               lambda e: serialize(ErrorDTO(Code=100500, Message=ErrorMessages.DatabaseError)))
+    if app.config['FLASK_ENV'].casefold() != 'Development'.casefold():
+        app.register_error_handler(SQLAlchemyError,
+                                   lambda e: serialize(ErrorDTO(Code=100500, Message=ErrorMessages.DatabaseError)))
     # app.register_error_handler(Exception,
     #                            lambda e: serialize(ErrorDTO(Code=100500, Message=str(e))))
 
