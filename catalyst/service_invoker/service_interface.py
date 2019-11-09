@@ -77,9 +77,14 @@ async def invoke_inter_service_operation(operation_id: str, *,
             result = await response.json()
 
         if result_type:
-            return TypedHttpResult[result_type](response.status,
-                                                dict_to_object(result, result_type),
-                                                dict(response.headers))
+            if response.status == HTTPStatus.OK:
+                return TypedHttpResult[result_type](response.status,
+                                                    dict_to_object(result, result_type),
+                                                    dict(response.headers))
+            else:
+                return TypedHttpResult[result_type](response.status,
+                                                    result_type(),
+                                                    dict(response.headers))
         else:
             return HttpResult(response.status,
                               result,
@@ -136,9 +141,14 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             result = response.json()
 
         if result_type:
-            return TypedHttpResult[result_type](response.status_code,
-                                                dict_to_object(result, result_type),
-                                                dict(response.headers))
+            if response.status_code == HTTPStatus.OK:
+                return TypedHttpResult[result_type](response.status_code,
+                                                    dict_to_object(result, result_type),
+                                                    dict(response.headers))
+            else:
+                return TypedHttpResult[result_type](response.status_code,
+                                                    result_type(),
+                                                    dict(response.headers))
         else:
             return HttpResult(response.status_code,
                               result,
