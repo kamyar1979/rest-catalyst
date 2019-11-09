@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+1.11.5
+------
+
+* fix: Register ApiError but no other errors in production mode
+* fix: Flask\_Env instead of Env
+
+1.11.4
+------
+
+
 1.11.3
 ------
 
