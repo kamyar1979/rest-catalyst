@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.11.6
+------
+
+* fix: Service invoker does not try to convert objects to dict if status code is not 200
+
 1.11.5
 ------
 
