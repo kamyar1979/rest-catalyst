@@ -7,6 +7,7 @@ import rapidjson
 from geoalchemy2 import WKBElement
 from geoalchemy2.shape import to_shape
 from sqlalchemy import inspect
+from sqlalchemy.ext.hybrid import hybrid_property
 from toolz import compose
 from inspect import isclass
 
@@ -91,10 +92,12 @@ def create_mapping(model: T,
 
     model_empty_fields = model_object_info.unloaded  # Omit lazy-loaded fields
     attributes = model_object_info.attrs
+    hybrid_properties = frozenset(i.__name__ for i in
+                                    model_object_info.mapper.all_orm_descriptors if type(i) == hybrid_property)
     relationships = model_object_info.mapper.relationships  # Discover relationships for nested objects
     result_object = dto_type()
     result = {}
-    attr_list = frozenset(item.key for item in attributes) | extra_fields
+    attr_list = frozenset(item.key for item in attributes) | extra_fields | hybrid_properties
 
     for k in attr_list:
         attr_name = (prefix or '') + k
