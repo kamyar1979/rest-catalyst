@@ -7,6 +7,6 @@ deploy:
   script:
     - pip install twine
     - python setup.py sdist bdist_wheel
-    - twine upload --repository-url https://nexus.ostadkar.pro/repository/pypi-internal/ --u gtilab --p Dsed+4P0sT6WZfzt6gwriQ== dist/*
+    - twine upload --repository-url https://nexus.ostadkar.pro/repository/pypi-internal/ -u gtilab -p Dsed+4P0sT6WZfzt6gwriQ== dist/*
   only:
     - master
