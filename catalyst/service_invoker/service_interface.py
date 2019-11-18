@@ -1,7 +1,9 @@
 from http import HTTPStatus
-from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union
+from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union, Mapping
 
 import aiohttp
+from catalyst.extensions import to_dict
+
 from catalyst.utils import dict_to_object
 
 from catalyst import service_invoker
@@ -61,6 +63,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
         headers['Authorization'] = f'Bearer {token}'
 
     headers.update({'Accept-Language': locale, 'Accept': format})
+
+    if not issubclass(payload, Mapping):
+        payload = to_dict(payload)
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
@@ -125,6 +130,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         headers['Authorization'] = f'Bearer {token}'
 
     headers.update({'Accept-Language': locale, 'Accept': format})
+
+    if not issubclass(payload, Mapping):
+        payload = to_dict(payload)
 
     with requests.Session() as session:
 
