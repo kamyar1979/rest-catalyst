@@ -64,7 +64,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     headers.update({'Accept-Language': locale, 'Accept': format})
 
-    if not issubclass(payload, Mapping):
+    if not issubclass(type(payload), Mapping):
         payload = to_dict(payload)
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
@@ -131,7 +131,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     headers.update({'Accept-Language': locale, 'Accept': format})
 
-    if not issubclass(payload, Mapping):
+    if not issubclass(type(payload), Mapping):
         payload = to_dict(payload)
 
     with requests.Session() as session:
