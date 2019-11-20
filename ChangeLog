@@ -1,9 +1,20 @@
 CHANGES
 =======
 
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+
 1.12.1
 ------
 
+* Update .gitlab-ci.yml
+* fix: Check payload type fix
+* Add new file
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
 * feat: Automatically convert payload to dict to inter-service operations
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
