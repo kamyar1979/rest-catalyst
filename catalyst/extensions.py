@@ -32,9 +32,12 @@ class SerializationFlags:
             self.ReplaceNoneWithEmptyString = SerializerFlags.ReplaceNullsWithEmpty in flags
 
 
+def get_request_locale() -> str:
+    return request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE
+
 def get_request_timezone() -> timezone:
     if 'timezone' not in g:
-        m = re.match(RegExPatterns.Locale, request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE)
+        m = re.match(RegExPatterns.Locale, get_request_locale())
         if m:
             locale = m.group()
         else:
@@ -143,7 +146,8 @@ def serialize(result: object, depth: int = 5) -> Response:
                    locale=request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE,
                    depth=depth)
 
-    accept_header = request.headers.get(HeaderKeys.Accept).split(';')
+    accept_header = request.headers.get(HeaderKeys.Accept).split(';') \
+        if request.headers.get(HeaderKeys.Accept) else DEFAULT_LOCALE
     if not accept_header:
         accept_content_type, charset = MimeTypes.JSON, DEFAULT_CHARSET
     elif len(accept_header) == 1:
