@@ -1,10 +1,17 @@
 CHANGES
 =======
 
+1.12.1
+------
+
+* feat: Automatically convert payload to dict to inter-service operations
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* feat: Add SqlAlchemy hybrid properties support to create\_mapping
+
 1.12.0
 ------
 
-* feat: Add SqlAlchemy hybrid properties support to create\_mapping
 * fix: Service invoker does not try to convert objects to dict if status code is not 200
 
 1.11.6
