@@ -88,7 +88,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                                     dict(response.headers))
             else:
                 return TypedHttpResult[result_type](response.status,
-                                                    result_type(),
+                                                    await response.text(),
                                                     dict(response.headers))
         else:
             return HttpResult(response.status,
@@ -155,7 +155,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                                     dict(response.headers))
             else:
                 return TypedHttpResult[result_type](response.status_code,
-                                                    result_type(),
+                                                    response.text,
                                                     dict(response.headers))
         else:
             return HttpResult(response.status_code,
