@@ -9,6 +9,6 @@ deploy:
     - python setup.py sdist bdist_wheel
     - twine upload --repository-url https://nexus.ostadkar.pro/repository/pypi-internal/ -u gitlab -p "Dsed+4P0sT6WZfzt6gwriQ==" dist/*
   only:
-    - tags
+    - master
   tags:
     - develop
