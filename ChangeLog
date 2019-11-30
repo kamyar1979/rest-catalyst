@@ -1,6 +1,8 @@
 CHANGES
 =======
 
+* fix: Return error for alien\_call
+* fix: Locale and Accept-Language fixture
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
