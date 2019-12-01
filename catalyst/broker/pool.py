@@ -9,11 +9,14 @@ from catalyst.extensions import raw_serialize
 
 connections: List[pika.BlockingConnection] = []
 serialization_format: str = MimeTypes.JSON
-
+connection_url: str = ''
+pool_size: int = 10
 
 @contextmanager
 def acquire() -> pika.BlockingConnection:
     con = connections.pop()
+    if con.is_closed:
+        con = pika.BlockingConnection(pika.connection.URLParameters(connection_url))
     yield con
     connections.append(con)
 
