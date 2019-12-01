@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* feat: Add broker publish support
 * fix: Return error for alien\_call
 * fix: Locale and Accept-Language fixture
 * Update .gitlab-ci.yml
