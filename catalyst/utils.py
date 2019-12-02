@@ -4,7 +4,7 @@ import struct
 import uuid
 from dataclasses import fields, dataclass, is_dataclass
 from datetime import datetime
-from typing import Tuple, TypeVar, Dict, Any, Type, Optional
+from typing import Tuple, TypeVar, Dict, Any, Type, Optional, Union
 
 import ntplib
 import pytz
@@ -80,9 +80,20 @@ T = TypeVar('T')
 
 
 def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
+    def get_field_value(val: Any, annotation: Optional[Type[T]] = None):
+        if annotation:
+            if hasattr(annotation, '__origin__'):
+                if annotation.__origin__ == Union:
+                    if hasattr(annotation, '__args__'):
+                        annotation = annotation.__args__[0]
+
+            if is_dataclass(annotation):
+                return dict_to_object(val, annotation)
+            else:
+                return parse_value(val, annotation)
+        else:
+            return val
+
     if is_dataclass(cls):
         cons_params = inspect.signature(cls).parameters
-        return cls(**{k:
-                          parse_value(data.get(k), cons_params[k].annotation)
-                          if cons_params[k].annotation else data.get(k)
-                      for k in data if k in cons_params})
+        return cls(**{k: get_field_value(data.get(k), cons_params[k].annotation) for k in data if k in cons_params})

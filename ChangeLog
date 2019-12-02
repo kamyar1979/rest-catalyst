@@ -1,9 +1,29 @@
 CHANGES
 =======
 
+1.13.1
+------
+
+* feat: Add changelog
+* fix: Revise broker connection pool
+
+1.13.0
+------
+
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
+* Update .gitlab-ci.yml
 * feat: Add broker publish support
+
+1.12.3
+------
+
 * fix: Return error for alien\_call
 * fix: Locale and Accept-Language fixture
+
+1.12.2
+------
+
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
