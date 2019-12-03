@@ -18,6 +18,7 @@ last_pool_init: datetime = datetime.utcnow()
 
 def renew_pool():
     global last_pool_init, connections
+    connections.clear()
     if (datetime.utcnow() - last_pool_init).seconds >= pool_recycle_period:
         connections = [pika.BlockingConnection(pika.connection.URLParameters(connection_url))
                        for i in range(pool_size)]
@@ -28,6 +29,8 @@ def renew_pool():
 @contextmanager
 def acquire() -> pika.BlockingConnection:
     if (datetime.utcnow() - last_pool_init).seconds > pool_recycle_period:
+        renew_pool()
+    if not connections:
         renew_pool()
     con = connections.pop()
     yield con
