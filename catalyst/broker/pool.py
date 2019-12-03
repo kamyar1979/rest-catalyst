@@ -1,7 +1,10 @@
 from contextlib import contextmanager
+from datetime import datetime
 
 import pika
-from typing import List, Any
+from typing import List, Any, Optional
+
+from pika import BlockingConnection
 
 from catalyst.constants import MimeTypes
 
@@ -10,13 +13,26 @@ from catalyst.extensions import raw_serialize
 connections: List[pika.BlockingConnection] = []
 serialization_format: str = MimeTypes.JSON
 connection_url: str = ''
-pool_size: int = 1
+pool_size: int = 5
+pool_recycle_period: int = 900
+last_pool_init: datetime = datetime.utcnow()
+
+
+
+def renew_pool():
+    global last_pool_init, connections
+    if (datetime.utcnow() - last_pool_init).seconds >= pool_recycle_period:
+        connections = [pika.BlockingConnection(pika.connection.URLParameters(connection_url))
+                            for i in range(pool_size)]
+
+    last_pool_init = datetime.utcnow()
+
 
 @contextmanager
 def acquire() -> pika.BlockingConnection:
+    if (datetime.utcnow() - last_pool_init).seconds > pool_recycle_period:
+        renew_pool()
     con = connections.pop()
-    if con.is_closed:
-        con = pika.BlockingConnection(pika.connection.URLParameters(connection_url))
     yield con
     connections.append(con)
 

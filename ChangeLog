@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.13.2
+------
+
+* fix: Broker channel close
+
 1.13.1
 ------
 
