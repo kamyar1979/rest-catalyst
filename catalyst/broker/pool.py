@@ -2,9 +2,7 @@ from contextlib import contextmanager
 from datetime import datetime
 
 import pika
-from typing import List, Any, Optional
-
-from pika import BlockingConnection
+from typing import List, Any
 
 from catalyst.constants import MimeTypes
 
