@@ -2,9 +2,7 @@ from contextlib import contextmanager
 from datetime import datetime
 
 import pika
-from typing import List, Any, Optional
-
-from pika import BlockingConnection
+from typing import List, Any
 
 from catalyst.constants import MimeTypes
 
@@ -18,12 +16,11 @@ pool_recycle_period: int = 900
 last_pool_init: datetime = datetime.utcnow()
 
 
-
 def renew_pool():
     global last_pool_init, connections
     if (datetime.utcnow() - last_pool_init).seconds >= pool_recycle_period:
         connections = [pika.BlockingConnection(pika.connection.URLParameters(connection_url))
-                            for i in range(pool_size)]
+                       for i in range(pool_size)]
 
     last_pool_init = datetime.utcnow()
 
@@ -45,4 +42,3 @@ def publish_event(exchange_name: str, routing_key: str, data: Any):
                                   routing_key=routing_key,
                                   body=raw_serialize(data, serialization_format),
                                   properties=pika.BasicProperties(content_type=serialization_format))
-
