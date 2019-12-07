@@ -1,10 +1,31 @@
 CHANGES
 =======
 
-1.13.2
+1.13.6
+------
+
+* fix: First time pooling fixed
+
+1.13.5
+------
+
+* fix: Check if connection pool is empty
+* refactor: Remove unneeded import
+
+1.13.4
+------
+
+* fix: default values for pool parameters
+* feat: Broker pool recycle
+
+1.13.3
 ------
 
 * fix: Broker channel close
+
+1.13.2
+------
+
 
 1.13.1
 ------

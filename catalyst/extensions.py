@@ -8,7 +8,7 @@ from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Ma
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
-from catalyst.constants import RegExPatterns, MimeTypes, HeaderKeys, ODATA_COUNT, ODATA_VALUE, SerializerFlags, \
+from catalyst.constants import RegExPatterns, MimeTypes, HeaderKeys, SerializerFlagString, ODATA_COUNT, ODATA_VALUE, \
     DEFAULT_LOCALE, DEFAULT_CHARSET
 from khayyam import JalaliDatetime, JalaliDate
 from pytz import country_timezones, timezone
@@ -25,15 +25,20 @@ class SerializationFlags:
     """
     IncludeNulls: bool = False
     ReplaceNoneWithEmptyString: bool = False
+    IgnoreLocaleCalendar: bool = False
+    IgnoreLocaleTimeZone: bool = False
 
     def __init__(self, flags: str):
         if flags:
-            self.IncludeNulls = SerializerFlags.IncludeNulls in flags
-            self.ReplaceNoneWithEmptyString = SerializerFlags.ReplaceNullsWithEmpty in flags
+            self.IncludeNulls = SerializerFlagString.IncludeNulls in flags
+            self.ReplaceNoneWithEmptyString = SerializerFlagString.ReplaceNullsWithEmpty in flags
+            self.IgnoreLocaleCalendar = SerializerFlagString.IgnoreLocaleCalendar in flags
+            self.IgnoreLocaleTimeZone = SerializerFlagString.IgnoreLocaleTimeZone in flags
 
 
 def get_request_locale() -> str:
     return request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE
+
 
 def get_request_timezone() -> timezone:
     if 'timezone' not in g:
@@ -98,18 +103,31 @@ def to_dict(obj: T,
         tz = timezone(country_timezones[country][0])
         if locale == 'fa-IR':
             if t is datetime:
-                if obj.tzinfo is None:
-                    return JalaliDatetime(tz.fromutc(obj)).isoformat()
+                if flags.IgnoreLocaleCalendar:
+                    if flags.IgnoreLocaleTimeZone:
+                        return obj.isoformat()
+                    if obj.tzinfo is None:
+                        return tz.fromutc(obj).isoformat()
+                    else:
+                        return obj.astimezone(tz)
                 else:
-                    return JalaliDatetime(obj.astimezone(tz)).isoformat()
+                    if flags.IgnoreLocaleTimeZone:
+                        return JalaliDatetime(obj).isoformat()
+                    if obj.tzinfo is None:
+                        return JalaliDatetime(tz.fromutc(obj)).isoformat()
+                    else:
+                        return JalaliDatetime(obj.astimezone(tz)).isoformat()
             elif t is date:
-                return JalaliDate(obj).isoformat()
+                if flags.IgnoreLocaleCalendar:
+                    return obj.isoformat()
+                else:
+                    return JalaliDate(obj).isoformat()
             elif t is time:
                 return obj.isoformat()
         else:
             return obj.isoformat()
     elif isinstance(obj, collections.Mapping):
-        return {k: to_dict(obj[k], flags=flags, locale=locale,  depth=depth - 1)
+        return {k: to_dict(obj[k], flags=flags, locale=locale, depth=depth - 1)
                 for k in obj
                 if obj[k] is not None
                 or flags.IncludeNulls}
@@ -132,6 +150,7 @@ def raw_serialize(data: Any, mime_type: str):
         return registered_serializers[mime_type](data)
     else:
         return registered_serializers[mime_type](to_dict(data))
+
 
 def serialize(result: object, depth: int = 5) -> Response:
     """
