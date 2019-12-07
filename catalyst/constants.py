@@ -53,9 +53,11 @@ class MimeTypes:
     Html = 'text/html'
 
 
-class SerializerFlags:
+class SerializerFlagString:
     IncludeNulls = 'IncludeNulls'
     ReplaceNullsWithEmpty = 'ReplaceNullsWithEmpty'
+    IgnoreLocaleCalendar = "IgnoreLocaleCalendar"
+    IgnoreLocaleTimeZone = "IgnoreLocaleTimeZone"
 
 
 class ErrorMessages:
