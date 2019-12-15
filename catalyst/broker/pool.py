@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from datetime import datetime
 
 import pika
-from typing import List, Any
+from typing import List, Any, Optional, Dict
 
 from catalyst.constants import MimeTypes
 
@@ -35,11 +35,12 @@ def acquire() -> pika.BlockingConnection:
     connections.append(con)
 
 
-def publish_event(exchange_name: str, routing_key: str, data: Any):
+def publish_event(exchange_name: str, routing_key: str, data: Any, headers: Optional[Dict[str, Any]] = None):
     with acquire() as connection:
         with connection.channel() as channel:
             channel.exchange_declare(exchange_name, durable=True, exchange_type='topic')
             channel.basic_publish(exchange=exchange_name,
                                   routing_key=routing_key,
                                   body=raw_serialize(data, serialization_format),
-                                  properties=pika.BasicProperties(content_type=serialization_format))
+                                  properties=pika.BasicProperties(content_type=serialization_format,
+                                                                  headers=headers))
