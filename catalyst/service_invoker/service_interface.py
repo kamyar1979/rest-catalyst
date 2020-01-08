@@ -1,7 +1,10 @@
 from http import HTTPStatus
+from io import BytesIO
 from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union, Mapping
 
 import aiohttp
+from aiohttp import FormData
+
 from catalyst.extensions import to_dict
 
 from catalyst.utils import dict_to_object
@@ -49,6 +52,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     headers = {}
     query_params = {}
+    data = FormData()
     for item in operation.Parameters:
         if operation.Parameters[item].In == ParameterInputType.Header:
             var_name = item.replace('X-', '').replace('-', '_').lower()
@@ -58,6 +62,10 @@ async def invoke_inter_service_operation(operation_id: str, *,
             var_name = item.replace('$', '').replace('-', '_').lower()
             if var_name in kwargs:
                 query_params[item] = str(kwargs[var_name])
+        elif operation.Parameters[item].In == ParameterInputType.FormData:
+            var_name = item.replace('$', '').replace('-', '_').lower()
+            if var_name in kwargs:
+                data.add_field(var_name, BytesIO(kwargs[var_name]))
 
     if token:
         headers['Authorization'] = f'Bearer {token}'
@@ -69,11 +77,18 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
-        response = await session.request(operation.Method,
-                                         url,
-                                         json=payload,
-                                         headers=headers,
-                                         params=query_params)
+        if data:
+            response = await session.request(operation.Method,
+                                             url,
+                                             data=data,
+                                             headers=headers,
+                                             params=query_params)
+        else:
+            response = await session.request(operation.Method,
+                                             url,
+                                             json=payload,
+                                             headers=headers,
+                                             params=query_params)
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
@@ -116,6 +131,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     headers = {}
     query_params = {}
+    data = {}
     for item in operation.Parameters:
         if operation.Parameters[item].In == ParameterInputType.Header:
             var_name = item.replace('X-', '').replace('-', '_').lower()
@@ -125,6 +141,10 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             var_name = item.replace('$', '').replace('-', '_').lower()
             if var_name in kwargs:
                 query_params[item] = str(kwargs[var_name])
+        elif operation.Parameters[item].In == ParameterInputType.FormData:
+            var_name = item.replace('$', '').replace('-', '_').lower()
+            if var_name in kwargs:
+                data[var_name] = ('', BytesIO(kwargs[var_name]), '', {})
 
     if token:
         headers['Authorization'] = f'Bearer {token}'
@@ -136,11 +156,19 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     with requests.Session() as session:
 
-        response = session.request(operation.Method,
-                                   url,
-                                   json=payload,
-                                   headers=headers,
-                                   params=query_params)
+        if data:
+            response = session.request(operation.Method,
+                                       url,
+                                       data=data,
+                                       headers=headers,
+                                       params=query_params)
+        else:
+            response = session.request(operation.Method,
+                                       url,
+                                       json=payload,
+                                       headers=headers,
+                                       params=query_params)
+
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
