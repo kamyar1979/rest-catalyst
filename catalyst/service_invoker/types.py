@@ -7,6 +7,7 @@ class ParameterInputType(Enum):
     Path = 'path'
     Body = 'body'
     Header = 'header'
+    FormData = 'formData'
 
 
 class ParameterInfo(NamedTuple):
