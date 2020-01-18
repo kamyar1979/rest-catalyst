@@ -1,65 +1,25 @@
 CHANGES
 =======
 
-1.13.8
-------
-
+* feat: Add form data capability for swagger call
+* feat: Capability of parsing dict
+* feat: broker publish now can get headers
 * fix: date/time json serialization for timezone
 * feat: Add timezone and calendar features for serialization flags
-
-1.13.7
-------
-
 * fix: First time pooling fixed
-
-1.13.6
-------
-
-
-1.13.5
-------
-
 * fix: Check if connection pool is empty
 * refactor: Remove unneeded import
-
-1.13.4
-------
-
 * fix: default values for pool parameters
 * feat: Broker pool recycle
-
-1.13.3
-------
-
 * fix: Broker channel close
-
-1.13.2
-------
-
-
-1.13.1
-------
-
 * feat: Add changelog
 * fix: Revise broker connection pool
-
-1.13.0
-------
-
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
 * feat: Add broker publish support
-
-1.12.3
-------
-
 * fix: Return error for alien\_call
 * fix: Locale and Accept-Language fixture
-
-1.12.2
-------
-
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
 * Update .gitlab-ci.yml
