@@ -77,7 +77,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
-        if data:
+        if data().size:
             response = await session.request(operation.Method,
                                              url,
                                              data=data,
