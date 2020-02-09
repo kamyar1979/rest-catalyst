@@ -5,6 +5,7 @@ import inspect
 from http import HTTPStatus
 from urllib.parse import parse_qs
 
+from catalyst.utils import dict_to_object
 from sqlalchemy.exc import DatabaseError
 
 from catalyst.dispatcher import parse_value, registered_deserializers, deserialize, validate_model
@@ -129,18 +130,7 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
                             # endregion
 
                             if is_dataclass(result_type):
-                                cons_params = inspect.signature(result_type).parameters
-                                obj = result_type(**{k:
-                                                         parse_value(data.get(k), cons_params[k].annotation)
-                                                         if cons_params[k].annotation else data.get(k)
-                                                     for k in data if k in cons_params})
-                                # endregion
-
-                                # region Fill attribute values fusing setattr
-                                for k2 in data:
-                                    if hasattr(obj, k2):
-                                        setattr(obj, k2, data[k2])
-                                # endregion
+                                obj = dict_to_object(data, result_type)
 
                                 is_valid, validation_errors = validate_model(data, result_type)
                                 if is_valid:
