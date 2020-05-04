@@ -36,8 +36,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          payload: Optional[Any] = None,
                                          token: Optional[str] = None,
                                          result_type: Optional[Type[T]] = None,
-                                         locale='en-US',
-                                         format='application/json',
+                                         locale: str='en-US',
+                                         format: str='application/json',
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 
@@ -115,8 +115,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         payload: Optional[Any] = None,
                                         token: Optional[str] = None,
                                         result_type: Optional[Type[T]] = None,
-                                        locale='en-US',
-                                        format='application/json',
+                                        locale: str='en-US',
+                                        format: str='application/json',
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
     operation: RestfulOperation = service_invoker.operations.get(operation_id)
 

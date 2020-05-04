@@ -8,8 +8,10 @@ def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperatio
     path_info = swagger['paths'][path]
     action_info = path_info[action]
     params = action_info.get('parameters') or {}
+    cache_duration = action_info.get('x-cache-duration') or 0
     return RestfulOperation(path, action,
-                            {p['name']: ParameterInfo(ParameterInputType(p['in']), p.get('type')) for p in params})
+                            {p['name']: ParameterInfo(ParameterInputType(p['in']), p.get('type')) for p in params},
+                            cache_duration)
 
 
 def get_swagger_operations(file_handle) -> Dict[str, RestfulOperation]:

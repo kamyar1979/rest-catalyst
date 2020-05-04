@@ -19,3 +19,4 @@ class RestfulOperation(NamedTuple):
     EndPoint: str
     Method: str
     Parameters: Optional[Dict[str, ParameterInfo]]
+    CacheDuration: int = 0
