@@ -1,5 +1,12 @@
 from enum import Enum
-from typing import NamedTuple, Optional, Dict
+from typing import NamedTuple, Optional, Dict, Tuple
+
+
+class SwaggerInfo(NamedTuple):
+    Host: str
+    Tags: Tuple[Dict[str, str], ...]
+    Timeout: int = 0
+    RetryOnFailure: int = 0
 
 
 class ParameterInputType(Enum):
@@ -20,3 +27,5 @@ class RestfulOperation(NamedTuple):
     Method: str
     Parameters: Optional[Dict[str, ParameterInfo]]
     CacheDuration: int = 0
+    Timeout: int = 0
+    RetryOnFailure: int = 0
