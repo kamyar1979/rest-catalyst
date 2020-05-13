@@ -1,9 +1,8 @@
 from typing import Dict, Optional
-from catalyst.service_invoker.swagger import get_swagger_operations
 import aiohttp
-from catalyst.service_invoker.types import ParameterInfo, RestfulOperation, SwaggerInfo
+from catalyst.service_invoker.types import ParameterInfo, RestfulOperation, SwaggerInfo, OpenAPI
 
-operations: Dict[str, RestfulOperation] = {}
+openApi: Optional[OpenAPI] = None
 base_url: str = ''
 
 async def read_swagger(url) -> str:

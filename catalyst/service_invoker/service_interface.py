@@ -36,10 +36,10 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          payload: Optional[Any] = None,
                                          token: Optional[str] = None,
                                          result_type: Optional[Type[T]] = None,
-                                         locale: str='en-US',
-                                         format: str='application/json',
+                                         locale: str = 'en-US',
+                                         serialization: str = 'application/json',
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-    operation: RestfulOperation = service_invoker.operations.get(operation_id)
+    operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
@@ -70,7 +70,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if token:
         headers['Authorization'] = f'Bearer {token}'
 
-    headers.update({'Accept-Language': locale, 'Accept': format})
+    headers.update({'Accept-Language': locale, 'Accept': serialization})
 
     if not issubclass(type(payload), Mapping):
         payload = to_dict(payload)
@@ -115,10 +115,10 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         payload: Optional[Any] = None,
                                         token: Optional[str] = None,
                                         result_type: Optional[Type[T]] = None,
-                                        locale: str='en-US',
-                                        format: str='application/json',
+                                        locale: str = 'en-US',
+                                        serialization: str = 'application/json',
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-    operation: RestfulOperation = service_invoker.operations.get(operation_id)
+    operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
@@ -149,7 +149,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if token:
         headers['Authorization'] = f'Bearer {token}'
 
-    headers.update({'Accept-Language': locale, 'Accept': format})
+    headers.update({'Accept-Language': locale, 'Accept': serialization})
 
     if not issubclass(type(payload), Mapping):
         payload = to_dict(payload)
@@ -168,7 +168,6 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                        json=payload,
                                        headers=headers,
                                        params=query_params)
-
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
