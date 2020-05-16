@@ -1,6 +1,9 @@
 CHANGES
 =======
 
+* fix: use dict\_to\_object for DTO feeding
+* fix: Aysnc alien call fix for form-data when there is no form data
+* feat: ApiError now supports severity
 * feat: Add form data capability for swagger call
 * feat: Capability of parsing dict
 * feat: broker publish now can get headers
