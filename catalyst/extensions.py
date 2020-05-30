@@ -1,4 +1,5 @@
 import inspect
+from enum import Enum
 
 import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
@@ -96,6 +97,8 @@ def to_dict(obj: T,
 
     elif t in (int, str, bytes, float, bool):
         return obj
+    elif issubclass(t, Enum):
+        return obj.value
     elif t is Decimal:
         return float(obj)
     elif t in (datetime, date, time):
