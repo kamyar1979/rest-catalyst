@@ -1,3 +1,4 @@
+import functools
 from http import HTTPStatus
 from io import BytesIO
 from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union, Mapping
@@ -43,6 +44,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
+
+    if operation.CacheDuration:
+        h = functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0)
 
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
