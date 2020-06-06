@@ -3,7 +3,7 @@ import inspect
 
 T = TypeVar('T')
 
-registered_types: Dict[Type, Callable[[Any,...], Any]] = {}
+registered_types: Dict[Type, Callable[..., Any]] = {}
 registered_serializers: Dict[str, Callable[[Any], AnyStr]] = {}
 registered_deserializers: Dict[str, Callable[[AnyStr], Any]] = {}
 validator_func: Callable[[Any], bool]
