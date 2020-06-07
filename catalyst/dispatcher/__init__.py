@@ -30,7 +30,11 @@ def parse_value(val: Any, t: Type[T]) -> T:
                     for c in k.__args__:
                         if inspect.isclass(t) and issubclass(t, c):
                             if t != type(None):
-                                return registered_types[k](val, requested_type=t)
+                                args = inspect.signature(registered_types[k])
+                                if 'requested_type' in args.parameters:
+                                    return registered_types[k](val, requested_type=t)
+                                else:
+                                    return registered_types[k](val)
         #endregion
 
         #region The type is Generic with constraints (TypeVar)
@@ -41,7 +45,7 @@ def parse_value(val: Any, t: Type[T]) -> T:
         #endregion
 
         # region The type is simple Python type
-        if inspect.isclass(t):
+        if inspect.isclass(t) and inspect.isclass(k):
             if type(val) == t:
                 return val
             elif issubclass(t, k):

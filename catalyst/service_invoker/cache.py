@@ -29,7 +29,6 @@ async def get_cache_item(key: str,
     if await async_redis.exists(key):
         result = await async_redis.get(key)
         if t:
-            print(umsgpack.loads(result))
             return dict_to_object(umsgpack.loads(result), t)
         else:
             return result
