@@ -152,7 +152,7 @@ def raw_serialize(data: Any, mime_type: str):
     if issubclass(type(data), Mapping):
         return registered_serializers[mime_type](data)
     else:
-        return registered_serializers[mime_type](to_dict(data))
+        return registered_serializers[mime_type](to_dict(data, flags=SerializationFlags('IgnoreLocaleCalendar')))
 
 
 def serialize(result: object, depth: int = 5) -> Response:

@@ -14,12 +14,12 @@ async_redis: Optional[aioredis.Redis] = None
 redis: Optional[StrictRedis] = None
 
 
-def init_cache_sync(uri: str, db: int):
+def init_cache_sync(uri: str, db: Optional[int] = None):
     global redis
     redis = StrictRedis.from_url(uri, db)
 
 
-async def init_cache(uri: str, db: int):
+async def init_cache(uri: str, db: Optional[int] = None):
     global async_redis
     async_redis = await aioredis.create_redis_pool(uri, db=db)
 

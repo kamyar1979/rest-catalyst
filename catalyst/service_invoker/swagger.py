@@ -1,10 +1,20 @@
 import yaml
-from typing import Optional
-from .types import SwaggerInfo
+from typing import Optional, Union
+from catalyst.service_invoker.types import RestfulOperation, ParameterInputType, ParameterInfo, SwaggerInfo, OpenAPI
+from durations import Duration
+import re
 
 swagger_info: Optional[SwaggerInfo] = None
 
-from catalyst.service_invoker.types import RestfulOperation, ParameterInputType, ParameterInfo, SwaggerInfo, OpenAPI
+
+def parse_duration(value: Union[None, str, int]) -> int:
+    if value:
+        if type(value) == int:
+            return value
+        else:
+            return Duration(value).to_seconds()
+    else:
+        return 0
 
 
 def get_swagger_info(swagger: dict) -> SwaggerInfo:
@@ -18,7 +28,7 @@ def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperatio
     path_info = swagger['paths'][path]
     action_info = path_info[action]
     params = action_info.get('parameters') or {}
-    cache_duration = action_info.get('x-cache-duration') or 0
+    cache_duration = parse_duration(action_info.get('x-cache-duration'))
     timeout = action_info.get('x-timeout') or swagger_info.Timeout
     retry_on_failure = action_info.get('x-retry-on-failure') or swagger_info.RetryOnFailure
     return RestfulOperation(path, action,
