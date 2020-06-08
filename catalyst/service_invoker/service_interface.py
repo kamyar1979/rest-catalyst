@@ -7,7 +7,8 @@ import aiohttp
 from aiohttp import FormData
 
 from catalyst.extensions import to_dict
-from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync
+from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync, \
+    cache_initialized
 
 from catalyst.utils import dict_to_object
 
@@ -47,7 +48,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
 
     key = '{}:{:x}'.format(operation_id,functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2**32-1))
-    if operation.CacheDuration:
+    if operation.CacheDuration and cache_initialized:
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
             cached_headers = await get_cache_item(key + '_headers')
@@ -112,7 +113,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
         else:
             result = await response.json()
 
-        if operation.CacheDuration and response.status == HTTPStatus.OK:
+        if operation.CacheDuration and cache_initialized and response.status == HTTPStatus.OK:
             if result_type:
                 await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
             else:
@@ -148,7 +149,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     key = '{}:{:x}'.format(operation_id,functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2**32-1))
 
-    if operation.CacheDuration:
+    if operation.CacheDuration and cache_initialized:
         cached_result = get_cache_item_sync(key, result_type)
         if cached_result:
             cached_headers = get_cache_item_sync(key + '_headers')
@@ -214,7 +215,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         else:
             result = response.json()
 
-        if operation.CacheDuration and response.status_code == HTTPStatus.OK:
+        if operation.CacheDuration and cache_initialized and response.status_code == HTTPStatus.OK:
             if result_type:
                 set_cache_item_sync(key, dict_to_object(result, result_type), operation.CacheDuration)
             else:
