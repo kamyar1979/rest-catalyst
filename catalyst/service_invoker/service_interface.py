@@ -1,3 +1,4 @@
+import functools
 from http import HTTPStatus
 from io import BytesIO
 from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union, Mapping
@@ -6,6 +7,7 @@ import aiohttp
 from aiohttp import FormData
 
 from catalyst.extensions import to_dict
+from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync
 
 from catalyst.utils import dict_to_object
 
@@ -36,13 +38,27 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          payload: Optional[Any] = None,
                                          token: Optional[str] = None,
                                          result_type: Optional[Type[T]] = None,
-                                         locale='en-US',
-                                         format='application/json',
+                                         locale: str = 'en-US',
+                                         serialization: str = 'application/json',
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-    operation: RestfulOperation = service_invoker.operations.get(operation_id)
+    operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
+
+    key = '{}:{:x}'.format(operation_id,functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2**32-1))
+    if operation.CacheDuration:
+        cached_result = await get_cache_item(key, result_type)
+        if cached_result:
+            cached_headers = await get_cache_item(key + '_headers')
+            if result_type:
+                return TypedHttpResult[result_type](HTTPStatus.OK,
+                                                    cached_result,
+                                                    cached_headers)
+            else:
+                return HttpResult(HTTPStatus.OK,
+                                  cached_result,
+                                  cached_headers)
 
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
@@ -70,9 +86,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if token:
         headers['Authorization'] = f'Bearer {token}'
 
-    headers.update({'Accept-Language': locale, 'Accept': format})
+    headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if not issubclass(type(payload), Mapping):
+    if not isinstance(payload, Mapping):
         payload = to_dict(payload)
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
@@ -96,6 +112,13 @@ async def invoke_inter_service_operation(operation_id: str, *,
         else:
             result = await response.json()
 
+        if operation.CacheDuration and response.status == HTTPStatus.OK:
+            if result_type:
+                await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
+            else:
+                await set_cache_item(key, result, operation.CacheDuration)
+            await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
+
         if result_type:
             if response.status == HTTPStatus.OK:
                 return TypedHttpResult[result_type](response.status,
@@ -115,13 +138,28 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         payload: Optional[Any] = None,
                                         token: Optional[str] = None,
                                         result_type: Optional[Type[T]] = None,
-                                        locale='en-US',
-                                        format='application/json',
+                                        locale: str = 'en-US',
+                                        serialization: str = 'application/json',
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-    operation: RestfulOperation = service_invoker.operations.get(operation_id)
+    operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
+
+    key = '{}:{:x}'.format(operation_id,functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2**32-1))
+
+    if operation.CacheDuration:
+        cached_result = get_cache_item_sync(key, result_type)
+        if cached_result:
+            cached_headers = get_cache_item_sync(key + '_headers')
+            if result_type:
+                return TypedHttpResult[result_type](HTTPStatus.OK,
+                                                    cached_result,
+                                                    cached_headers)
+            else:
+                return HttpResult(HTTPStatus.OK,
+                                  cached_result,
+                                  cached_headers)
 
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
@@ -149,9 +187,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if token:
         headers['Authorization'] = f'Bearer {token}'
 
-    headers.update({'Accept-Language': locale, 'Accept': format})
+    headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if not issubclass(type(payload), Mapping):
+    if not isinstance(payload, Mapping):
         payload = to_dict(payload)
 
     with requests.Session() as session:
@@ -175,6 +213,13 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             result = deserialize(response.content, content_type)
         else:
             result = response.json()
+
+        if operation.CacheDuration and response.status_code == HTTPStatus.OK:
+            if result_type:
+                set_cache_item_sync(key, dict_to_object(result, result_type), operation.CacheDuration)
+            else:
+                set_cache_item_sync(key, result, operation.CacheDuration)
+            set_cache_item_sync(key + '_headers', response.headers, operation.CacheDuration)
 
         if result_type:
             if response.status_code == HTTPStatus.OK:

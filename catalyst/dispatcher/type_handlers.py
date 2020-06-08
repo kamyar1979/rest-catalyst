@@ -1,10 +1,10 @@
-import base64
 from datetime import datetime, date, time
 from enum import Enum
-from typing import Any, AnyStr, Tuple, TypeVar, Type
+from typing import Any, AnyStr, Tuple, TypeVar, Type, Optional
 
 import geojson
 import rapidjson
+from khayyam import JalaliDatetime
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 
@@ -58,7 +58,10 @@ def parse_string(val: AnyStr) -> str:
 @type_handler
 def parse_datetime(val: Any) -> datetime:
     value = str(val, encoding=DEFAULT_CHARSET) if type(val) is bytes else val
-    return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+    try:
+        return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+    except:
+        return JalaliDatetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f%z').todatetime()
 
 
 @type_handler
@@ -83,5 +86,8 @@ def parse_enum(val: Any, requested_type: Type[E]) -> Enum:
 
 
 @type_handler
-def parse_geometry(val: Any) -> BaseGeometry:
-    return shape(geojson.loads(rapidjson.dumps(val)))
+def parse_geometry(val: Any) -> Optional[BaseGeometry]:
+    if val:
+        return shape(geojson.loads(rapidjson.dumps(val)))
+    else:
+        return

@@ -1,5 +1,14 @@
+from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Optional, Dict
+from typing import NamedTuple, Optional, Dict, Tuple
+
+
+@dataclass
+class SwaggerInfo:
+    Host: str
+    Tags: Tuple[Dict[str, str], ...]
+    Timeout: int = 0
+    RetryOnFailure: int = 0
 
 
 class ParameterInputType(Enum):
@@ -15,7 +24,17 @@ class ParameterInfo(NamedTuple):
     Type: Optional[str]
 
 
-class RestfulOperation(NamedTuple):
+@dataclass
+class RestfulOperation:
     EndPoint: str
     Method: str
     Parameters: Optional[Dict[str, ParameterInfo]]
+    CacheDuration: int = 0
+    Timeout: int = 0
+    RetryOnFailure: int = 0
+
+
+@dataclass
+class OpenAPI:
+    Info: SwaggerInfo
+    Operations: Dict[str, RestfulOperation]
