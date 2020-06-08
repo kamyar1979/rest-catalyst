@@ -1,22 +1,31 @@
 import asyncio
-import urllib
+
 
 import requests
 
 from catalyst import service_invoker
-from catalyst.service_invoker import get_swagger_operations
 from catalyst.service_invoker import service_interface
+from catalyst.service_invoker.cache import init_cache, init_cache_sync
+from catalyst.service_invoker.swagger import get_openAPI_info
+import alien
 
-service_invoker.base_url = 'https://api.dev.ostadkar.pro'
-response = requests.get('https://api.dev.ostadkar.pro/swaggerui/swagger.yml')
-service_invoker.operations = get_swagger_operations(response.text)
+service_invoker.base_url = 'http://api.dev.ostadkar.pro:2390'
+response = requests.get('https://api.dev.ostadkar.pro/swaggerui/configs/swagger.yml')
+service_invoker.openApi = get_openAPI_info(response.text)
 
-result =  service_interface.invoke_inter_service_operation_sync('get_orders_number', order_number='12345')
+init_cache_sync('redis://localhost/3')
+
+result =  service_interface.invoke_inter_service_operation_sync('get_orders_number',
+                                                                order_number='69hRqRTYRek',
+                                                                result_type=alien.OrderDTO)
 
 loop = asyncio.get_event_loop()
 
 async def invoke():
-    result = await service_interface.invoke_inter_service_operation('get_orders_number', order_number='12345')
+    await init_cache('redis://localhost/3')
+    result = await service_interface.invoke_inter_service_operation('get_orders_number',
+                                                                    order_number='69hRqRTYRek',
+                                                                    result_type=alien.OrderDTO)
     print(result.Status)
 
 

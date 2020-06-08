@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+* fix: Geometry type and Persian Date fixed
+* feat: Complete cache system
+* feat: add alien service parameter caching
+* fix: Enum type serialization fix
+* refactor: Just changelog
+* feat: Revise service invoker for swagger integration
+* feat: Embed cache, timeout and retry into swagger invoker
+* feat: Cache near complete
+* feat: Prepare to support cache within inter-service invokation
 * fix: use dict\_to\_object for DTO feeding
 * fix: Aysnc alien call fix for form-data when there is no form data
 * feat: ApiError now supports severity
