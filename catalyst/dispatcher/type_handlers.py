@@ -4,7 +4,7 @@ from typing import Any, AnyStr, Tuple, TypeVar, Type, Optional
 
 import geojson
 import rapidjson
-from khayyam import JalaliDatetime
+import re
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 
@@ -58,10 +58,14 @@ def parse_string(val: AnyStr) -> str:
 @type_handler
 def parse_datetime(val: Any) -> datetime:
     value = str(val, encoding=DEFAULT_CHARSET) if type(val) is bytes else val
-    try:
+    if re.match(r'^\d{2,4}-\d{,2}-\d{,2}\s\d{,2}:\d{,2}:\d{,2}$', value):
         return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-    except:
-        return JalaliDatetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f%z').todatetime()
+    elif re.match(r'^\d{2,4}-\d{,2}-\d{,2}T\d{,2}:\d{,2}:\d{,2}$', value):
+        return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S')
+    elif re.match(r'^\d{2,4}-\d{,2}-\d{,2}T\d{,2}:\d{,2}:\d{,2}\.\d+$', value):
+        return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
+    elif re.match(r'^\d{2,4}-\d{,2}-\d{,2}T\d{,2}:\d{,2}:\d{,2}\.\d+[+-]\d{,2}:?\d{,2}$', value):
+        return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f%z')
 
 
 @type_handler
