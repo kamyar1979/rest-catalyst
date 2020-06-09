@@ -12,7 +12,7 @@ def parse_duration(value: Union[None, str, int]) -> int:
         if type(value) == int:
             return value
         else:
-            return Duration(value).to_seconds()
+            return int(Duration(value).to_seconds())
     else:
         return 0
 
