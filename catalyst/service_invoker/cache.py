@@ -12,21 +12,22 @@ from dataclasses import dataclass
 T = TypeVar('T', object, dataclass)
 async_redis: Optional[aioredis.Redis] = None
 redis: Optional[StrictRedis] = None
-cache_initialized = False
+
+
+def is_cache_initialized() -> bool:
+    return bool(redis) or bool(async_redis)
 
 
 def init_cache_sync(uri: str, db: Optional[int] = None):
-    global redis, cache_initialized
+    global redis
     if uri:
         redis = StrictRedis.from_url(uri, db)
-        cache_initialized = True
 
 
 async def init_cache(uri: str, db: Optional[int] = None):
-    global async_redis, cache_initialized
+    global async_redis
     if uri:
         async_redis = await aioredis.create_redis_pool(uri, db=db)
-        cache_initialized = True
 
 
 async def get_cache_item(key: str,
