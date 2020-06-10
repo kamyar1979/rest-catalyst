@@ -22,8 +22,10 @@ def get_current_time(tz=pytz.utc, config: Optional[Dict[str, Any]] = None) -> da
     :param tz: Time zone to be applied
     :return: Python standard datetime
     """
-    config = config or app.config
-    if ConfigKeys.NTPServer not in config:
+    if not config:
+        if app:
+            config = app.config
+    if not config or ConfigKeys.NTPServer not in config:
         return tz.fromutc(datetime.utcnow())
     try:
         c = ntplib.NTPClient()
