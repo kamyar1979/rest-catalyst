@@ -47,7 +47,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
 
-    key = '{}:{:x}'.format(operation_id,functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2**32-1))
+    key = '{}:{:x}'.format(operation_id, functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1))
     if operation.CacheDuration and is_cache_initialized:
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
@@ -147,7 +147,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
 
-    key = '{}:{:x}'.format(operation_id,functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2**32-1))
+    key = '{}:{:x}'.format(operation_id, functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1))
 
     if operation.CacheDuration and is_cache_initialized():
         cached_result = get_cache_item_sync(key, result_type)
@@ -207,7 +207,6 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                        json=payload,
                                        headers=headers,
                                        params=query_params)
-
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')

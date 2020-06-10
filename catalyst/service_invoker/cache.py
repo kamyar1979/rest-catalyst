@@ -35,13 +35,13 @@ async def get_cache_item(key: str,
     if await async_redis.exists(key):
         result = await async_redis.get(key)
         if t:
-            return dict_to_object(umsgpack.loads(result), t)
+            return dict_to_object(umsgpack.unpackb(result), t)
         else:
             return result
 
 
 async def set_cache_item(key: str, obj: T, duration: int):
-    data = umsgpack.dumps(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
+    data = umsgpack.packb(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
     await async_redis.setex(key, duration, data)
 
 
@@ -49,11 +49,11 @@ def get_cache_item_sync(key: str, t: Optional[Type[T]] = None) -> Union[None, T,
     if redis.exists(key):
         result = redis.get(key)
         if t:
-            return dict_to_object(umsgpack.loads(result), t)
+            return dict_to_object(umsgpack.unpackb(result), t)
         else:
             return result
 
 
 def set_cache_item_sync(key: str, obj: T, duration: int):
-    data = umsgpack.dumps(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
+    data = umsgpack.packb(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
     redis.setex(key, duration, data)
