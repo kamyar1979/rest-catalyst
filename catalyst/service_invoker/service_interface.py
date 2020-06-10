@@ -8,7 +8,7 @@ from aiohttp import FormData
 
 from catalyst.extensions import to_dict
 from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync, \
-    is_cache_initialized
+    is_cache_initialized, delete_cache_items, delete_cache_items_sync
 
 from catalyst.utils import dict_to_object
 
@@ -251,3 +251,15 @@ def check_result(value: HttpResult) -> HttpResult:
         return value
     else:
         raise InterServiceError(value.Body.get('message'), value.Body.get('code'), value.Body.get('uri'))
+
+
+async def invalidate_cache(resource_name: str, slug: str):
+    await delete_cache_items('*{resource_name}*:{params_hash}'.format(
+        resource_name=resource_name,
+        params_hash=hash((f'{resource_name}_slug', slug)) & (2 ** 32 - 1)))
+
+
+def invalidate_cache_sync(resource_name: str, slug: str):
+    delete_cache_items_sync('*{resource_name}*:{params_hash}'.format(
+        resource_name=resource_name,
+        params_hash=hash((f'{resource_name}_slug', slug)) & (2 ** 32 - 1)))

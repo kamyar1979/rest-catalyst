@@ -45,8 +45,11 @@ async def set_cache_item(key: str, obj: T, duration: int):
     await async_redis.setex(key, duration, data)
 
 
-async def delete_cache_item(key: str):
-    await async_redis.delete(key)
+async def delete_cache_items(wildcard: str):
+    items = await async_redis.keys(wildcard)
+    if items:
+        for key in items:
+            await async_redis.delete(key)
 
 
 def get_cache_item_sync(key: str, t: Optional[Type[T]] = None) -> Union[None, T, Dict[str, Any]]:
@@ -63,5 +66,8 @@ def set_cache_item_sync(key: str, obj: T, duration: int):
     redis.setex(key, duration, data)
 
 
-def delete_cache_item_sync(key: str):
-    redis.delete(key)
+async def delete_cache_items_sync(wildcard: str):
+    items = redis.keys(wildcard)
+    if items:
+        for key in items:
+            await redis.delete(key)
