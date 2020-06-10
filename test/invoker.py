@@ -2,6 +2,7 @@ import asyncio
 
 
 import requests
+from catalyst.service_invoker.service_interface import invalidate_cache
 
 from catalyst import service_invoker
 from catalyst.service_invoker import service_interface
@@ -27,6 +28,8 @@ async def invoke():
                                                                     order_number='69hRqRTYRek',
                                                                     result_type=alien.OrderDTO)
     print(result.Status)
+
+    await invalidate_cache('order', order_number='69hRqRTYRek')
 
 
 loop.run_until_complete(invoke())

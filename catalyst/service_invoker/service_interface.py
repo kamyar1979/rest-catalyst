@@ -253,13 +253,13 @@ def check_result(value: HttpResult) -> HttpResult:
         raise InterServiceError(value.Body.get('message'), value.Body.get('code'), value.Body.get('uri'))
 
 
-async def invalidate_cache(resource_name: str, slug: str):
-    await delete_cache_items('*{resource_name}*:{params_hash}'.format(
+async def invalidate_cache(resource_name: str, **kwargs):
+    await delete_cache_items('*{resource_name}*:{params_hash:x}*'.format(
         resource_name=resource_name,
-        params_hash=hash((f'{resource_name}_slug', slug)) & (2 ** 32 - 1)))
+        params_hash=functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1)))
 
 
-def invalidate_cache_sync(resource_name: str, slug: str):
-    delete_cache_items_sync('*{resource_name}*:{params_hash}'.format(
+def invalidate_cache_sync(resource_name: str, **kwargs):
+    delete_cache_items_sync('*{resource_name}*:{params_hash:x}*'.format(
         resource_name=resource_name,
-        params_hash=hash((f'{resource_name}_slug', slug)) & (2 ** 32 - 1)))
+        params_hash=functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1)))
