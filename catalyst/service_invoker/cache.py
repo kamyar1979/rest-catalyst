@@ -1,5 +1,5 @@
 from collections import Mapping
-from typing import TypeVar, Type, Optional, Union, Dict, Any, Callable
+from typing import TypeVar, Type, Optional, Union, Dict, Any
 
 from catalyst.extensions import to_dict
 
@@ -45,6 +45,10 @@ async def set_cache_item(key: str, obj: T, duration: int):
     await async_redis.setex(key, duration, data)
 
 
+async def delete_cache_item(key: str):
+    await async_redis.delete(key)
+
+
 def get_cache_item_sync(key: str, t: Optional[Type[T]] = None) -> Union[None, T, Dict[str, Any]]:
     if redis.exists(key):
         result = redis.get(key)
@@ -57,3 +61,7 @@ def get_cache_item_sync(key: str, t: Optional[Type[T]] = None) -> Union[None, T,
 def set_cache_item_sync(key: str, obj: T, duration: int):
     data = umsgpack.packb(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
     redis.setex(key, duration, data)
+
+
+def delete_cache_item_sync(key: str):
+    redis.delete(key)
