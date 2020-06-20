@@ -14,7 +14,6 @@ GeoAlchemy2
 Flask
 Shapely
 ntplib
-umsgpack==0.1.0
 json2html
 pbr
 base-62
