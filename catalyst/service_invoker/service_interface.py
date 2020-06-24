@@ -48,7 +48,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
 
     key = '{}:{:x}'.format(operation_id, functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1))
-    if operation.CacheDuration and is_cache_initialized:
+    if operation.CacheDuration and is_cache_initialized():
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
             cached_headers = await get_cache_item(key + '_headers')
@@ -113,7 +113,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
         else:
             result = await response.json()
 
-        if operation.CacheDuration and is_cache_initialized and response.status == HTTPStatus.OK:
+        if operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
             if result_type:
                 await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
             else:
