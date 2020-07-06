@@ -34,15 +34,17 @@ async def get_cache_item(key: str,
                          t: Optional[Type[T]] = None) -> Union[None, T, Dict[str, Any]]:
     if await async_redis.exists(key):
         result = await async_redis.get(key)
-        if t:
-            return dict_to_object(umsgpack.unpackb(result), t)
-        else:
-            return result
+        if result:
+            data = umsgpack.unpackb(result)
+            if t:
+                return dict_to_object(data, t)
+            else:
+                return data
 
 
 async def set_cache_item(key: str, obj: T, duration: int):
-    data = umsgpack.packb(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
-    await async_redis.setex(key, duration, data)
+    data = to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj)
+    await async_redis.setex(key, duration, umsgpack.packb(data))
 
 
 async def delete_cache_items(wildcard: str):
@@ -55,15 +57,17 @@ async def delete_cache_items(wildcard: str):
 def get_cache_item_sync(key: str, t: Optional[Type[T]] = None) -> Union[None, T, Dict[str, Any]]:
     if redis.exists(key):
         result = redis.get(key)
-        if t:
-            return dict_to_object(umsgpack.unpackb(result), t)
-        else:
-            return result
+        if result:
+            data = umsgpack.unpackb(result)
+            if t:
+                return dict_to_object(data, t)
+            else:
+                return data
 
 
 def set_cache_item_sync(key: str, obj: T, duration: int):
-    data = umsgpack.packb(to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj))
-    redis.setex(key, duration, data)
+    data = to_dict(obj, locale='en-US') if not isinstance(obj, Mapping) else dict(obj)
+    redis.setex(key, duration, umsgpack.packb(data))
 
 
 def delete_cache_items_sync(wildcard: str):
