@@ -66,8 +66,8 @@ def set_cache_item_sync(key: str, obj: T, duration: int):
     redis.setex(key, duration, data)
 
 
-async def delete_cache_items_sync(wildcard: str):
+def delete_cache_items_sync(wildcard: str):
     items = redis.keys(wildcard)
     if items:
         for key in items:
-            await redis.delete(key)
+            redis.delete(key)
