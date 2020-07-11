@@ -1,6 +1,61 @@
 CHANGES
 =======
 
+1.14.12
+-------
+
+* fix: Delete cache non-async
+
+1.14.11
+-------
+
+* fix: Cache initialization test fixture
+
+1.14.10
+-------
+
+* fix: umsgpack requirement fixed
+
+1.14.9
+------
+
+* fix: Cache invalidation changed for our applications
+
+1.14.8
+------
+
+* feat: Invalidate cache as per resource name and slug
+
+1.14.7
+------
+
+* feat: Cache items can now be deleted
+
+1.14.6
+------
+
+* fix: MessagePack binary encoding fixed for cache
+
+1.14.5
+------
+
+* fix: get\_current\_time not dependent to app
+
+1.14.4
+------
+
+* fix: Duration must be int
+
+1.14.3
+------
+
+* fix: Cache initialized fixed
+
+1.14.2
+------
+
+* feat: Cache can be disabled
+
 1.14.1
 ------
 
