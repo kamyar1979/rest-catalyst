@@ -35,7 +35,7 @@ def acquire() -> pika.BlockingConnection:
     connections.append(con)
 
 
-def publish_event(exchange_name: str, routing_key: str, data: Any, headers: Optional[Dict[str, Any]] = None):
+def publish_event(exchange_name: str, routing_key: str, data: Any, **kwargs):
     with acquire() as connection:
         with connection.channel() as channel:
             channel.exchange_declare(exchange_name, durable=True, exchange_type='topic')
@@ -43,4 +43,4 @@ def publish_event(exchange_name: str, routing_key: str, data: Any, headers: Opti
                                   routing_key=routing_key,
                                   body=raw_serialize(data, serialization_format),
                                   properties=pika.BasicProperties(content_type=serialization_format,
-                                                                  headers=headers))
+                                                                  headers=kwargs))
