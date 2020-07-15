@@ -1,4 +1,6 @@
 import functools
+import inspect
+import logging
 from http import HTTPStatus
 from io import BytesIO
 from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union, Mapping
@@ -12,7 +14,7 @@ from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, 
 
 from catalyst.utils import dict_to_object
 
-from catalyst import service_invoker
+from catalyst import service_invoker, app
 from catalyst.constants import HeaderKeys
 from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
@@ -41,7 +43,16 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          result_type: Optional[Type[T]] = None,
                                          locale: str = 'en-US',
                                          serialization: str = 'application/json',
+                                         use_cache: bool = True,
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
+
+    logging.debug("Trying to call %s with params %s and body %s from %s %s",
+                  operation_id,
+                  kwargs,
+                  payload,
+                  app.name,
+                  inspect.currentframe().f_back)
+
     operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
 
     if not operation:
@@ -50,9 +61,12 @@ async def invoke_inter_service_operation(operation_id: str, *,
     key = '{}:{:x}'.format(operation_id,
                            functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1))
 
-    if operation.CacheDuration and is_cache_initialized():
+    logging.debug("Cache key is %s.", key)
+
+    if operation.CacheDuration and is_cache_initialized() and use_cache:
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
+            logging.info("Reading from cache...")
             cached_headers = await get_cache_item(key + '_headers')
             if result_type:
                 return TypedHttpResult[result_type](HTTPStatus.OK,
@@ -143,7 +157,16 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         result_type: Optional[Type[T]] = None,
                                         locale: str = 'en-US',
                                         serialization: str = 'application/json',
+                                        use_cache: bool = True,
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
+
+    logging.debug("Trying to call %s with params %s and body %s from %s %s",
+                  operation_id,
+                  kwargs,
+                  payload,
+                  app.name,
+                  inspect.currentframe().f_back)
+
     operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
 
     if not operation:
@@ -152,9 +175,12 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     key = '{}:{:x}'.format(operation_id,
                            functools.reduce(lambda p, c: p ^ hash(c), kwargs.items(), 0) & (2 ** 32 - 1))
 
-    if operation.CacheDuration and is_cache_initialized():
+    logging.debug("Cache key is %s.", key)
+
+    if operation.CacheDuration and is_cache_initialized() and use_cache:
         cached_result = get_cache_item_sync(key, result_type)
         if cached_result:
+            logging.info("Reading from cache...")
             cached_headers = get_cache_item_sync(key + '_headers')
             if result_type:
                 return TypedHttpResult[result_type](HTTPStatus.OK,

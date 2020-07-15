@@ -1,6 +1,21 @@
 CHANGES
 =======
 
+1.15.1
+------
+
+* refactor: publish now uses keyword arguments for headers
+
+1.15.0
+------
+
+* feat: Add clear\_cache
+
+1.14.13
+-------
+
+* fix: MessagePack deserialization for dict was neglected!
+
 1.14.12
 -------
 
