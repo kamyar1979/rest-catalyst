@@ -46,11 +46,10 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          use_cache: bool = True,
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
 
-    logging.info("Trying to call %s with params %s and body %s from %s %s",
+    logging.info("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
                   payload,
-                  app.name,
                   inspect.currentframe().f_back)
 
     operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
