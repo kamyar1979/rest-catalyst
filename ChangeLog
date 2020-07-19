@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.15.4
+------
+
+* fix: Workers do not have app.name
+
 1.15.3
 ------
 

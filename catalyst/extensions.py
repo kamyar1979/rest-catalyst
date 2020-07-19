@@ -5,7 +5,7 @@ import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
 
 from flask import request, make_response, g, Response
-from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Mapping
+from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Mapping, Generator
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
@@ -193,7 +193,7 @@ def serialize(result: object, depth: int = 5) -> Response:
 U = TypeVar('U')
 
 
-def odata(count: int, items: Iterable[Type[U]]) -> Dict[str, Union[int, Iterable[Type[U]]]]:
+def odata(count: int, items: Generator[Type[U], None, None]) -> Dict[str, Union[int, Iterable[Type[U]]]]:
     return {ODATA_COUNT: count,
             ODATA_VALUE: items}
 
