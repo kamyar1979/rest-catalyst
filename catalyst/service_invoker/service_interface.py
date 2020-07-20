@@ -159,7 +159,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         use_cache: bool = True,
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
 
-    logging.info("Trying to call %s with params %s and body %s from %s %s",
+    logging.debug("Trying to call %s with params %s and body %s from %s %s",
                   operation_id,
                   kwargs,
                   payload,
