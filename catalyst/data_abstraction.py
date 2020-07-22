@@ -1,6 +1,8 @@
+import inspect
 import logging
 from contextlib import contextmanager
 
+from flask_sqlalchemy import models_committed
 from sqlalchemy.orm import Session, Query
 from sqlalchemy import func, Column
 from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional, Generator
@@ -8,7 +10,7 @@ from toolz import compose
 
 from catalyst.adapters import ODataQueryAdapter
 from catalyst.constants import ConfigKeys, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
-from . import db, app
+from . import db, app, signals
 
 logger = logging.getLogger('orm')
 
@@ -72,6 +74,7 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
                        use_row_number=False) -> Union[Tuple[List[T], int], int]:
     """
     Parses OData input and returns list of model object
+    :param db_session: SQLAlchemy session to use for query
     :param data: OData input data, currently QueryString
     :param cls: Main entity type for query
     :param content_type: Teh format of OData input
@@ -82,6 +85,8 @@ def search_using_OData(db_session: Session, data: AnyStr, cls: type, content_typ
     :param expunge_after_all: Kill ORM session after getting the result
     :param use_baked_queries: Use bakery for caching ORm queries
     :param convenient: Use security conveniences when trying to query database
+    :param count_only: Just return the count not the results
+    :param use_row_number: Uses SQL row_number window function for pagination (not limit/offset)
     :return:
     """
     try:
@@ -141,3 +146,22 @@ def check_slug_exists(cls: Type[T],
 
 def create_schema():
     db.create_all()
+
+
+def register_signal(callback: Callable[[object, str], None]):
+    sig = inspect.signature(callback)
+    func_args = sig.parameters
+    param_names = tuple(func_args.keys())
+    model_type = func_args[param_names[0]].annotation
+
+    signals[model_type] = callback
+
+
+def notify_subscribers(_app, changes):
+    for target, op in changes:
+        for cb in signals:
+            if isinstance(target, cb):
+                signals[cb](target, op)
+
+
+models_committed.connect(notify_subscribers, app)

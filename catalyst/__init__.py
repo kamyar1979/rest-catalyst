@@ -2,8 +2,7 @@ import gettext
 import logging.config
 import os
 from importlib import import_module
-from typing import Optional, Tuple, Callable
-
+from typing import Optional, Tuple, Callable, Dict
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -19,7 +18,7 @@ logger = logging.getLogger('Catalyst')
 
 db: Optional[SQLAlchemy] = None
 app: Optional[Flask] = None
-reconnect: Callable[[], None]
+signals: Dict[type, Callable[[object, str], None]] = {}
 DefaultLocale: str = ''
 DefaultCharset: str = ''
 default_directory_exclude: Tuple[str, ...] = ('__pycache__', 'node_modules')
@@ -27,7 +26,7 @@ default_directory_exclude: Tuple[str, ...] = ('__pycache__', 'node_modules')
 
 def register_application(flask_application: Flask,
                          database: SQLAlchemy):
-    global app, db, reconnect
+    global app, db
     app = flask_application
     db = database
 

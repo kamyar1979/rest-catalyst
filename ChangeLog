@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+1.15.6
+------
+
+* fix: Remove debug log for non-async alien call
+
+1.15.5
+------
+
+* fix: odata type fix. Revert alien call log to debug
+
 1.15.4
 ------
 
