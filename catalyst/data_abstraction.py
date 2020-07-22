@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from flask_sqlalchemy import models_committed
 from sqlalchemy.orm import Session, Query
 from sqlalchemy import func, Column
-from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional, Generator
+from typing import Callable, Tuple, Union, AnyStr, TypeVar, List, Type, Optional, Generator, Any
 from toolz import compose
 
 from catalyst.adapters import ODataQueryAdapter
@@ -148,7 +148,7 @@ def create_schema():
     db.create_all()
 
 
-def register_signal(callback: Callable[[object, str], None]):
+def register_signal(callback: Callable[[Any, str], None]):
     sig = inspect.signature(callback)
     func_args = sig.parameters
     param_names = tuple(func_args.keys())
@@ -158,10 +158,14 @@ def register_signal(callback: Callable[[object, str], None]):
 
 
 def notify_subscribers(_app, changes):
+    unregister : List[type] = []
     for target, op in changes:
-        for cb in signals:
-            if isinstance(target, cb):
-                signals[cb](target, op)
+        for t in signals:
+            if isinstance(target, t):
+                if not signals[t](target, op):
+                   unregister.append(t)
+    for t in unregister:
+        del signals[t]
 
 
 models_committed.connect(notify_subscribers, app)

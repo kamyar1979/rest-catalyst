@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.16.0
+------
+
+* feat: Add Sql-Alchemy signaling
+
 1.15.6
 ------
 
