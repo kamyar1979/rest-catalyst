@@ -45,7 +45,6 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          serialization: str = 'application/json',
                                          use_cache: bool = True,
                                          **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
@@ -65,7 +64,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if operation.CacheDuration and is_cache_initialized() and use_cache:
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
-            logging.info("Reading from cache...")
+            logging.info("Reading %s with %s from cache...",
+                         operation_id,
+                         kwargs)
             cached_headers = await get_cache_item(key + '_headers')
             if result_type:
                 return TypedHttpResult[result_type](HTTPStatus.OK,
@@ -158,7 +159,6 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         serialization: str = 'application/json',
                                         use_cache: bool = True,
                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-
     logging.debug("Trying to call %s with params %s and body %s from %s %s",
                   operation_id,
                   kwargs,
@@ -179,7 +179,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if operation.CacheDuration and is_cache_initialized() and use_cache:
         cached_result = get_cache_item_sync(key, result_type)
         if cached_result:
-            logging.info("Reading from cache...")
+            logging.info("Reading %s with %s from cache...",
+                         operation_id,
+                         kwargs)
             cached_headers = get_cache_item_sync(key + '_headers')
             if result_type:
                 return TypedHttpResult[result_type](HTTPStatus.OK,
