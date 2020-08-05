@@ -23,14 +23,13 @@ from catalyst.dispatcher import deserializers
 from catalyst.service_invoker.types import ParameterInputType, RestfulOperation
 import requests
 
+T = TypeVar("T")
+
 
 class HttpResult(NamedTuple):
     Status: int
-    Body: Any
+    Body: T
     Headers: Dict[str, str]
-
-
-T = TypeVar("T")
 
 
 class TypedHttpResult(HttpResult, Generic[T]):
