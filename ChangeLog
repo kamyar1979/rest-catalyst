@@ -1,6 +1,27 @@
 CHANGES
 =======
 
+1.16.4
+------
+
+* feat: Generic phone number regex pattern added
+* feat: Add more RegEx patterns. Fix Tpying
+
+1.16.3
+------
+
+* core: Make logs rich for cache
+
+1.16.2
+------
+
+* fix: Add requirement s for signaling
+
+1.16.1
+------
+
+* feat: Add auto-unregister capability to signals
+
 1.16.0
 ------
 
