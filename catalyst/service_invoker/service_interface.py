@@ -128,7 +128,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
         else:
             result = await response.json()
 
-        if operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
+        if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
+            logging.info("Writing %s with %s to cache...", operation_id,
+                         kwargs)
             if result_type:
                 await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
             else:
@@ -243,7 +245,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         else:
             result = response.json()
 
-        if operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
+        if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
+            logging.info("Writing %s with %s to cache...", operation_id,
+                         kwargs)
             if result_type:
                 set_cache_item_sync(key, dict_to_object(result, result_type), operation.CacheDuration)
             else:
