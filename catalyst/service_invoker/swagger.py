@@ -28,12 +28,12 @@ def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperatio
     path_info = swagger['paths'][path]
     action_info = path_info[action]
     params = action_info.get('parameters') or {}
-    cache_duration = parse_duration(action_info.get('x-cache-duration'))
+    alien_cache = parse_duration(action_info.get('x-alien-cache'))
     timeout = action_info.get('x-timeout') or swagger_info.Timeout
     retry_on_failure = action_info.get('x-retry-on-failure') or swagger_info.RetryOnFailure
     return RestfulOperation(path, action,
                             {p['name']: ParameterInfo(ParameterInputType(p['in']), p.get('type')) for p in params},
-                            cache_duration,
+                            alien_cache,
                             timeout,
                             retry_on_failure)
 
