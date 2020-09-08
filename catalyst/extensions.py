@@ -1,5 +1,6 @@
 import inspect
 from enum import Enum
+from uuid import UUID
 
 import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
@@ -101,6 +102,8 @@ def to_dict(obj: T,
         return obj.value
     elif t is Decimal:
         return float(obj)
+    elif t is UUID:
+        return obj.hex
     elif t in (datetime, date, time):
         country: str = locale[-2:]
         tz = timezone(country_timezones[country][0])
