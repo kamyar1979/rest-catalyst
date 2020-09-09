@@ -61,7 +61,8 @@ T = TypeVar('T')
 def to_dict(obj: T,
             flags: SerializationFlags = SerializationFlags(''),
             locale: str = DEFAULT_LOCALE,
-            depth: int = 3) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
+            depth: int = 3,
+            uuid_hex: bool=True) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
     Converts a Python object to dictionary, with recursion over the inner objects
     :param obj: Input Python object
@@ -103,7 +104,10 @@ def to_dict(obj: T,
     elif t is Decimal:
         return float(obj)
     elif t is UUID:
-        return obj.hex
+        if uuid_hex:
+            return obj.hex
+        else:
+            return obj
     elif t in (datetime, date, time):
         country: str = locale[-2:]
         tz = timezone(country_timezones[country][0])
