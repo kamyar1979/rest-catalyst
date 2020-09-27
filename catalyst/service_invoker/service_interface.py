@@ -3,7 +3,7 @@ import inspect
 import logging
 from http import HTTPStatus
 from io import BytesIO
-from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Union, Mapping
+from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Mapping
 
 import aiohttp
 from aiohttp import FormData
@@ -14,7 +14,7 @@ from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, 
 
 from catalyst.utils import dict_to_object
 
-from catalyst import service_invoker, app
+from catalyst import service_invoker
 from catalyst.constants import HeaderKeys
 from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
@@ -39,7 +39,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          locale: str = 'en-US',
                                          serialization: str = 'application/json',
                                          use_cache: bool = True,
-                                         **kwargs) -> HttpResult[T]:
+                                         **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
@@ -99,6 +99,12 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if not isinstance(payload, Mapping):
         payload = to_dict(payload)
 
+    timeout: Optional[float] = None
+    if operation.Timeout:
+        timeout = operation.Timeout / 1000.0
+    elif service_invoker.openApi.Info.Timeout:
+        timeout = service_invoker.openApi.Info.Timeout / 1000.0
+
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
         if data().size:
@@ -106,13 +112,15 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                              url,
                                              data=data,
                                              headers=headers,
-                                             params=query_params)
+                                             params=query_params,
+                                             timeout=timeout)
         else:
             response = await session.request(operation.Method,
                                              url,
                                              json=payload,
                                              headers=headers,
-                                             params=query_params)
+                                             params=query_params,
+                                             timeout=timeout)
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
@@ -151,7 +159,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         locale: str = 'en-US',
                                         serialization: str = 'application/json',
                                         use_cache: bool = True,
-                                        **kwargs) -> HttpResult[T]:
+                                        **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
@@ -215,6 +223,12 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if not isinstance(payload, Mapping):
         payload = to_dict(payload)
 
+    timeout: Optional[float] = None
+    if operation.Timeout:
+        timeout = operation.Timeout / 1000.0
+    elif service_invoker.openApi.Info.Timeout:
+        timeout = service_invoker.openApi.Info.Timeout / 1000.0
+
     with requests.Session() as session:
 
         if data:
@@ -222,13 +236,15 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                        url,
                                        data=data,
                                        headers=headers,
-                                       params=query_params)
+                                       params=query_params,
+                                       timeout=timeout)
         else:
             response = session.request(operation.Method,
                                        url,
                                        json=payload,
                                        headers=headers,
-                                       params=query_params)
+                                       params=query_params,
+                                       timeout=timeout)
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
