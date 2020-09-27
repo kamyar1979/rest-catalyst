@@ -1,6 +1,5 @@
 import asyncio
 
-
 import requests
 from catalyst.service_invoker.service_interface import invalidate_cache
 
@@ -16,16 +15,17 @@ service_invoker.openApi = get_openAPI_info(response.text)
 
 init_cache_sync('redis://localhost/3')
 
-result =  service_interface.invoke_inter_service_operation_sync('get_orders_number',
-                                                                order_number='69hRqRTYRek',
-                                                                result_type=alien.OrderDTO)
+result = service_interface.invoke_inter_service_operation_sync('get_orders_number',
+                                                               order_number='gIBf3zZB9P0',
+                                                               result_type=alien.OrderDTO)
 
 loop = asyncio.get_event_loop()
+
 
 async def invoke():
     await init_cache('redis://localhost/3')
     result = await service_interface.invoke_inter_service_operation('get_orders_number',
-                                                                    order_number='69hRqRTYRek',
+                                                                    order_number='gIBf3zZB9P0',
                                                                     result_type=alien.OrderDTO)
     print(result.Status)
 
@@ -33,6 +33,3 @@ async def invoke():
 
 
 loop.run_until_complete(invoke())
-
-
-
