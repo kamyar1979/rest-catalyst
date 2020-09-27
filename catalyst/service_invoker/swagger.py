@@ -2,7 +2,6 @@ import yaml
 from typing import Optional, Union
 from catalyst.service_invoker.types import RestfulOperation, ParameterInputType, ParameterInfo, SwaggerInfo, OpenAPI
 from durations import Duration
-import re
 
 swagger_info: Optional[SwaggerInfo] = None
 
