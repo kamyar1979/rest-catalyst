@@ -26,14 +26,10 @@ import requests
 T = TypeVar("T")
 
 
-class HttpResult(NamedTuple):
+class HttpResult(NamedTuple, Generic[T]):
     Status: int
     Body: T
     Headers: Dict[str, str]
-
-
-class TypedHttpResult(HttpResult, Generic[T]):
-    pass
 
 
 async def invoke_inter_service_operation(operation_id: str, *,
@@ -43,7 +39,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          locale: str = 'en-US',
                                          serialization: str = 'application/json',
                                          use_cache: bool = True,
-                                         **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
+                                         **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
@@ -67,14 +63,10 @@ async def invoke_inter_service_operation(operation_id: str, *,
                          operation_id,
                          kwargs)
             cached_headers = await get_cache_item(key + '_headers')
-            if result_type:
-                return TypedHttpResult[result_type](HTTPStatus.OK,
-                                                    cached_result,
-                                                    cached_headers)
-            else:
-                return HttpResult(HTTPStatus.OK,
-                                  cached_result,
-                                  cached_headers)
+
+            return HttpResult(HTTPStatus.OK,
+                              cached_result,
+                              cached_headers)
 
     url = service_invoker.base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
@@ -139,13 +131,13 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
         if result_type:
             if response.status == HTTPStatus.OK:
-                return TypedHttpResult[result_type](response.status,
-                                                    dict_to_object(result, result_type),
-                                                    dict(response.headers))
+                return HttpResult(response.status,
+                                  dict_to_object(result, result_type),
+                                  dict(response.headers))
             else:
-                return TypedHttpResult[result_type](response.status,
-                                                    await response.text(),
-                                                    dict(response.headers))
+                return HttpResult(response.status,
+                                  await response.text(),
+                                  dict(response.headers))
         else:
             return HttpResult(response.status,
                               result,
@@ -159,12 +151,11 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         locale: str = 'en-US',
                                         serialization: str = 'application/json',
                                         use_cache: bool = True,
-                                        **kwargs) -> Union[HttpResult, TypedHttpResult[T]]:
-    logging.debug("Trying to call %s with params %s and body %s from %s %s",
+                                        **kwargs) -> HttpResult[T]:
+    logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
                   payload,
-                  app.name,
                   inspect.currentframe().f_back)
 
     operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
@@ -185,9 +176,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                          kwargs)
             cached_headers = get_cache_item_sync(key + '_headers')
             if result_type:
-                return TypedHttpResult[result_type](HTTPStatus.OK,
-                                                    cached_result,
-                                                    cached_headers)
+                return HttpResult(HTTPStatus.OK,
+                                  cached_result,
+                                  cached_headers)
             else:
                 return HttpResult(HTTPStatus.OK,
                                   cached_result,
@@ -256,13 +247,13 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
         if result_type:
             if response.status_code == HTTPStatus.OK:
-                return TypedHttpResult[result_type](response.status_code,
-                                                    dict_to_object(result, result_type),
-                                                    dict(response.headers))
+                return HttpResult(response.status_code,
+                                  dict_to_object(result, result_type),
+                                  dict(response.headers))
             else:
-                return TypedHttpResult[result_type](response.status_code,
-                                                    response.text,
-                                                    dict(response.headers))
+                return HttpResult(response.status_code,
+                                  response.text,
+                                  dict(response.headers))
         else:
             return HttpResult(response.status_code,
                               result,
