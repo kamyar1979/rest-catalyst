@@ -18,6 +18,7 @@ def parse_duration(value: Union[None, str, int]) -> int:
 
 def get_swagger_info(swagger: dict) -> SwaggerInfo:
     return SwaggerInfo(swagger.get('host'),
+                       swagger.get('schemes'),
                        swagger.get('tags'),
                        swagger.get('x-timeout') or 0,
                        swagger.get('x-retry-on-failure') or 0)
