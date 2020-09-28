@@ -6,6 +6,7 @@ from typing import NamedTuple, Optional, Dict, Tuple
 @dataclass
 class SwaggerInfo:
     Host: str
+    Schemes: Tuple[str, ...]
     Tags: Tuple[Dict[str, str], ...]
     Timeout: int = 0
     RetryOnFailure: int = 0
