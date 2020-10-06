@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Optional, Dict, Tuple
+from typing import NamedTuple, Optional, Dict, Tuple, Any
 
 
 @dataclass
@@ -9,7 +9,7 @@ class SwaggerInfo:
     Schemes: Tuple[str, ...]
     Tags: Tuple[Dict[str, str], ...]
     Timeout: int = 0
-    RetryOnFailure: int = 0
+    RetryOnFailure: Optional[Dict[str, Any]] = None
 
 
 class ParameterInputType(Enum):
@@ -32,7 +32,7 @@ class RestfulOperation:
     Parameters: Optional[Dict[str, ParameterInfo]]
     CacheDuration: int = 0
     Timeout: int = 0
-    RetryOnFailure: int = 0
+    RetryOnFailure: Optional[Dict[str, Any]] = None
 
 
 @dataclass
