@@ -1,6 +1,9 @@
+from io import StringIO
+
 import yaml
-from typing import Optional, Union
-from catalyst.service_invoker.types import RestfulOperation, ParameterInputType, ParameterInfo, SwaggerInfo, OpenAPI
+from typing import Optional, Union, AnyStr, Dict, Any
+from catalyst.service_invoker.types import RestfulOperation, ParameterInputType, ParameterInfo, SwaggerInfo, OpenAPI, \
+    ApiSecurity
 from durations import Duration
 
 swagger_info: Optional[SwaggerInfo] = None
@@ -16,12 +19,21 @@ def parse_duration(value: Union[None, str, int]) -> int:
         return 0
 
 
-def get_swagger_info(swagger: dict) -> SwaggerInfo:
-    return SwaggerInfo(swagger.get('host'),
-                       swagger.get('schemes'),
-                       swagger.get('tags'),
-                       swagger.get('x-timeout') or 0,
-                       swagger.get('x-retry-on-failure') or 0)
+def parse_security_definitions(security_definitions: Optional[Dict[str, Any]] = None) -> Dict[str, ApiSecurity]:
+    if security_definitions:
+        return {k: ApiSecurity(security_definitions[k]['type'],
+                               security_definitions[k]['in'],
+                               security_definitions[k]['name']) for k in security_definitions}
+
+def get_swagger_info(swagger: Dict[str, Any]) -> SwaggerInfo:
+    return SwaggerInfo(Host=swagger.get('host'),
+                       Schemes=swagger.get('schemes'),
+                       Tags=swagger.get('tags'),
+                       Timeout=swagger.get('x-timeout') or 0,
+                       RetryOnFailure=swagger.get('x-retry-on-failure'),
+                       BasePath=swagger.get('basePath'),
+                       SecurityDefinitions=parse_security_definitions(swagger.get('securityDefinitions')),
+                       Security=swagger.get('security'))
 
 
 def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperation:
@@ -38,7 +50,7 @@ def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperatio
                             retry_on_failure)
 
 
-def get_openAPI_info(file_handle) -> OpenAPI:
+def get_openAPI_info(file_handle: Union[StringIO, AnyStr]) -> OpenAPI:
     global swagger_info
     swagger = yaml.load(file_handle, Loader=yaml.FullLoader)
     swagger_info = get_swagger_info(swagger)

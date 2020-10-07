@@ -13,23 +13,36 @@ service_invoker.base_url = 'http://api.dev.ostadkar.pro:2390'
 response = requests.get('https://api.dev.ostadkar.pro/swaggerui/configs/swagger.yml')
 service_invoker.openApi = get_openAPI_info(response.text)
 
+with open('/Volumes/MacHDD/Projects/ostadkar-product-service/swagger/chista.yml', 'rt') as f:
+    swagger = get_openAPI_info(f.read())
+
+
 init_cache_sync('redis://localhost/3')
 
-result = service_interface.invoke_inter_service_operation_sync('get_orders_number',
-                                                               order_number='gIBf3zZB9P0',
-                                                               result_type=alien.OrderDTO)
-
-loop = asyncio.get_event_loop()
-
-
-async def invoke():
-    await init_cache('redis://localhost/3')
-    result = await service_interface.invoke_inter_service_operation('get_orders_number',
-                                                                    order_number='gIBf3zZB9P0',
-                                                                    result_type=alien.OrderDTO)
-    print(result.Status)
-
-    await invalidate_cache('order', order_number='69hRqRTYRek')
+# result = service_interface.invoke_inter_service_operation_sync('get_orders_number',
+#                                                                order_number='gIBf3zZB9P0',
+#                                                                result_type=alien.OrderDTO,
+#                                                                swagger=swagger)
 
 
-loop.run_until_complete(invoke())
+result = service_interface.invoke_inter_service_operation_sync('search_location',
+                                                               search_phrase='یوسف آباد',
+                                                               swagger=swagger,
+                                                               security={'APIKey': '6m5RM4p5kfApFTo72bEUlwsr6O0G6Vnl'})
+print(result.Status)
+print(result.Body)
+# loop = asyncio.get_event_loop()
+#
+#
+# async def invoke():
+#     await init_cache('redis://localhost/3')
+#     result = await service_interface.invoke_inter_service_operation('get_orders_number',
+#                                                                     order_number='gIBf3zZB9P0',
+#                                                                     result_type=alien.OrderDTO,
+#                                                                     swagger=swagger)
+#     print(result.Status)
+#
+#     await invalidate_cache('order', order_number='69hRqRTYRek')
+#
+#
+# loop.run_until_complete(invoke())

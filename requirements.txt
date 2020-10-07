@@ -26,3 +26,4 @@ redis
 aioredis
 durations
 blinker
+tenacity

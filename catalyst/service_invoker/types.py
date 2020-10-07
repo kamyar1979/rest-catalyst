@@ -1,15 +1,12 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Optional, Dict, Tuple
+from typing import NamedTuple, Optional, Dict, Tuple, Any
 
 
-@dataclass
-class SwaggerInfo:
-    Host: str
-    Schemes: Tuple[str, ...]
-    Tags: Tuple[Dict[str, str], ...]
-    Timeout: int = 0
-    RetryOnFailure: int = 0
+class SecurityType(Enum):
+    Basic = 'basic'
+    ApiKey = 'apiKey'
+    OAuth = 'oauth2'
 
 
 class ParameterInputType(Enum):
@@ -18,6 +15,25 @@ class ParameterInputType(Enum):
     Body = 'body'
     Header = 'header'
     FormData = 'formData'
+
+
+@dataclass
+class ApiSecurity:
+    Type: SecurityType
+    In: ParameterInputType
+    Name: str
+
+
+@dataclass
+class SwaggerInfo:
+    Host: str
+    Schemes: Tuple[str, ...]
+    Tags: Tuple[Dict[str, str], ...]
+    Timeout: int = 0
+    RetryOnFailure: Optional[Dict[str, Any]] = None
+    BasePath: Optional[str] = None
+    SecurityDefinitions: Optional[Dict[str, ApiSecurity]] = None
+    Security: Optional[str] = None
 
 
 class ParameterInfo(NamedTuple):
@@ -32,7 +48,7 @@ class RestfulOperation:
     Parameters: Optional[Dict[str, ParameterInfo]]
     CacheDuration: int = 0
     Timeout: int = 0
-    RetryOnFailure: int = 0
+    RetryOnFailure: Optional[Dict[str, Any]] = None
 
 
 @dataclass
