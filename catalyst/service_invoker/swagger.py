@@ -1,5 +1,7 @@
+from io import StringIO
+
 import yaml
-from typing import Optional, Union
+from typing import Optional, Union, AnyStr
 from catalyst.service_invoker.types import RestfulOperation, ParameterInputType, ParameterInfo, SwaggerInfo, OpenAPI
 from durations import Duration
 
@@ -38,7 +40,7 @@ def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperatio
                             retry_on_failure)
 
 
-def get_openAPI_info(file_handle) -> OpenAPI:
+def get_openAPI_info(file_handle: Union[StringIO, AnyStr]) -> OpenAPI:
     global swagger_info
     swagger = yaml.load(file_handle, Loader=yaml.FullLoader)
     swagger_info = get_swagger_info(swagger)

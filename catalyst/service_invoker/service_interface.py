@@ -7,21 +7,21 @@ from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Mapp
 
 import aiohttp
 from aiohttp import FormData
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 from catalyst.extensions import to_dict
 from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync, \
     is_cache_initialized, delete_cache_items, delete_cache_items_sync
-
 from catalyst.utils import dict_to_object
-
 from catalyst import service_invoker
 from catalyst.constants import HeaderKeys
 from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
 from catalyst.dispatcher import deserializers
+from catalyst.service_invoker.types import ParameterInputType, RestfulOperation, OpenAPI
 
-from catalyst.service_invoker.types import ParameterInputType, RestfulOperation
-import requests
 
 T = TypeVar("T")
 
@@ -32,6 +32,8 @@ class HttpResult(NamedTuple, Generic[T]):
     Headers: Dict[str, str]
 
 
+
+
 async def invoke_inter_service_operation(operation_id: str, *,
                                          payload: Optional[Any] = None,
                                          token: Optional[str] = None,
@@ -39,6 +41,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          locale: str = 'en-US',
                                          serialization: str = 'application/json',
                                          use_cache: bool = True,
+                                         swagger: Optional[OpenAPI] = None,
                                          **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -46,7 +49,14 @@ async def invoke_inter_service_operation(operation_id: str, *,
                   payload,
                   inspect.currentframe().f_back)
 
-    operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
+    if swagger:
+        openApi = swagger
+        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}'
+    else:
+        openApi = service_invoker.openApi
+        base_url = service_invoker.base_url
+
+    operation: RestfulOperation = openApi.Operations.get(operation_id)
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
@@ -68,7 +78,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                               cached_result,
                               cached_headers)
 
-    url = service_invoker.base_url + operation.EndPoint.format(
+    url = base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
            p in operation.Parameters and
            operation.Parameters[p].In == ParameterInputType.Path and
@@ -102,8 +112,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
     timeout: Optional[float] = None
     if operation.Timeout:
         timeout = operation.Timeout / 1000.0
-    elif service_invoker.openApi.Info.Timeout:
-        timeout = service_invoker.openApi.Info.Timeout / 1000.0
+    elif openApi.Info.Timeout:
+        timeout = openApi.Info.Timeout / 1000.0
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
@@ -159,6 +169,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         locale: str = 'en-US',
                                         serialization: str = 'application/json',
                                         use_cache: bool = True,
+                                        swagger: Optional[OpenAPI] = None,
                                         **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -166,7 +177,14 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                   payload,
                   inspect.currentframe().f_back)
 
-    operation: RestfulOperation = service_invoker.openApi.Operations.get(operation_id)
+    if swagger:
+        openApi = swagger
+        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}'
+    else:
+        openApi = service_invoker.openApi
+        base_url = service_invoker.base_url
+
+    operation: RestfulOperation = openApi.Operations.get(operation_id)
 
     if not operation:
         raise InterServiceError(f"There is no operation with id {operation_id}", 404)
@@ -183,16 +201,13 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                          operation_id,
                          kwargs)
             cached_headers = get_cache_item_sync(key + '_headers')
-            if result_type:
-                return HttpResult(HTTPStatus.OK,
-                                  cached_result,
-                                  cached_headers)
-            else:
-                return HttpResult(HTTPStatus.OK,
-                                  cached_result,
-                                  cached_headers)
 
-    url = service_invoker.base_url + operation.EndPoint.format(
+            return HttpResult(HTTPStatus.OK,
+                              cached_result,
+                              cached_headers)
+
+
+    url = base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
            p in operation.Parameters and
            operation.Parameters[p].In == ParameterInputType.Path and
@@ -223,13 +238,29 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if not isinstance(payload, Mapping):
         payload = to_dict(payload)
 
-    timeout: Optional[float] = None
+    timeout: Optional[float] = 5
     if operation.Timeout:
         timeout = operation.Timeout / 1000.0
-    elif service_invoker.openApi.Info.Timeout:
-        timeout = service_invoker.openApi.Info.Timeout / 1000.0
+    elif openApi.Info.Timeout:
+        timeout = openApi.Info.Timeout / 1000.0
+
+    retry_params = {
+        'total': 5,
+        'backoff_factor': 0,
+        'status_forcelist': [429, 500, 502, 503, 504],
+        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
+    }
+
+    if openApi.Info.RetryOnFailure:
+        retry_params = openApi.Info.RetryOnFailure
+    if operation.RetryOnFailure:
+        retry_params.update(**operation.RetryOnFailure)
+
+    adapter = HTTPAdapter(max_retries=Retry(**retry_params))
 
     with requests.Session() as session:
+
+        session.mount(base_url, adapter)
 
         if data:
             response = session.request(operation.Method,
