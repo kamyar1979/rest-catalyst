@@ -36,7 +36,7 @@ class HttpResult(NamedTuple, Generic[T]):
 
 async def invoke_inter_service_operation(operation_id: str, *,
                                          payload: Optional[Any] = None,
-                                         token: Optional[str] = None,
+                                         security: Optional[Dict[str, str]] = None,
                                          result_type: Optional[Type[T]] = None,
                                          locale: str = 'en-US',
                                          serialization: str = 'application/json',
@@ -101,8 +101,14 @@ async def invoke_inter_service_operation(operation_id: str, *,
             if var_name in kwargs:
                 data.add_field(var_name, BytesIO(kwargs[var_name]))
 
-    if token:
-        headers['Authorization'] = f'Bearer {token}'
+    if security:
+        for item in security:
+            sec = openApi.Info.SecurityDefinitions.get(item)
+            if sec:
+                if sec.In == ParameterInputType.Header:
+                    headers[sec.Name] = security[item]
+                elif sec.In == ParameterInputType.Query:
+                    query_params[sec.Name] = security[item]
 
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
@@ -164,7 +170,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
 def invoke_inter_service_operation_sync(operation_id: str, *,
                                         payload: Optional[Any] = None,
-                                        token: Optional[str] = None,
+                                        security: Optional[Dict[str, str]] = None,
                                         result_type: Optional[Type[T]] = None,
                                         locale: str = 'en-US',
                                         serialization: str = 'application/json',
@@ -179,7 +185,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     if swagger:
         openApi = swagger
-        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}'
+        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}/{openApi.Info.BasePath}'
     else:
         openApi = service_invoker.openApi
         base_url = service_invoker.base_url
@@ -230,8 +236,14 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             if var_name in kwargs:
                 data[var_name] = ('', BytesIO(kwargs[var_name]), '', {})
 
-    if token:
-        headers['Authorization'] = f'Bearer {token}'
+    if security:
+        for item in security:
+            sec = openApi.Info.SecurityDefinitions.get(item)
+            if sec:
+                if sec.In == ParameterInputType.Header:
+                    headers[sec.Name] = security[item]
+                elif sec.In == ParameterInputType.Query:
+                    query_params[sec.Name] = security[item]
 
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
