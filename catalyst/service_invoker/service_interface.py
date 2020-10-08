@@ -49,7 +49,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     if swagger:
         openApi = swagger
-        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}'
+        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}/{openApi.Info.BasePath}'
     else:
         openApi = service_invoker.openApi
         base_url = service_invoker.base_url
