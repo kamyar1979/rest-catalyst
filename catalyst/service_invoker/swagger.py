@@ -22,7 +22,7 @@ def parse_duration(value: Union[None, str, int]) -> int:
 def parse_security_definitions(security_definitions: Optional[Dict[str, Any]] = None) -> Dict[str, ApiSecurity]:
     if security_definitions:
         return {k: ApiSecurity(security_definitions[k]['type'],
-                               security_definitions[k]['in'],
+                               ParameterInputType(security_definitions[k]['in']),
                                security_definitions[k]['name']) for k in security_definitions}
 
 def get_swagger_info(swagger: Dict[str, Any]) -> SwaggerInfo:
@@ -31,7 +31,7 @@ def get_swagger_info(swagger: Dict[str, Any]) -> SwaggerInfo:
                        Tags=swagger.get('tags'),
                        Timeout=swagger.get('x-timeout') or 0,
                        RetryOnFailure=swagger.get('x-retry-on-failure'),
-                       BasePath=swagger.get('basePath'),
+                       BasePath=swagger.get('basePath') or '',
                        SecurityDefinitions=parse_security_definitions(swagger.get('securityDefinitions')),
                        Security=swagger.get('security'))
 

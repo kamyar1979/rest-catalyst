@@ -27,3 +27,4 @@ aioredis
 durations
 blinker
 tenacity
+inflector
