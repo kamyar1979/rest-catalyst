@@ -10,6 +10,10 @@ from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Ma
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
+
+from shapely.geometry import mapping
+from shapely.geometry.base import BaseGeometry
+
 from catalyst.constants import RegExPatterns, MimeTypes, HeaderKeys, SerializerFlagString, ODATA_COUNT, ODATA_VALUE, \
     DEFAULT_LOCALE, DEFAULT_CHARSET
 from khayyam import JalaliDatetime, JalaliDate
@@ -96,7 +100,8 @@ def to_dict(obj: T,
                 if res[k] is not None
                 or flags.IncludeNulls
                 or (flags.ReplaceNoneWithEmptyString and annotations[k]) == str}
-
+    elif issubclass(t, BaseGeometry):
+        return mapping(obj)
     elif t in (int, str, bytes, float, bool):
         return obj
     elif issubclass(t, Enum):
