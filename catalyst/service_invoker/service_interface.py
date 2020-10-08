@@ -22,7 +22,6 @@ from catalyst.service_invoker.errors import InterServiceError
 from catalyst.dispatcher import deserializers
 from catalyst.service_invoker.types import ParameterInputType, RestfulOperation, OpenAPI
 
-
 T = TypeVar("T")
 
 
@@ -30,8 +29,6 @@ class HttpResult(NamedTuple, Generic[T]):
     Status: int
     Body: T
     Headers: Dict[str, str]
-
-
 
 
 async def invoke_inter_service_operation(operation_id: str, *,
@@ -42,6 +39,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          serialization: str = 'application/json',
                                          use_cache: bool = True,
                                          swagger: Optional[OpenAPI] = None,
+                                         inflection: bool = False,
                                          **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -113,7 +111,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
     if not isinstance(payload, Mapping):
-        payload = to_dict(payload)
+        payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = None
     if operation.Timeout:
@@ -176,6 +174,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         serialization: str = 'application/json',
                                         use_cache: bool = True,
                                         swagger: Optional[OpenAPI] = None,
+                                        inflection: bool = False,
                                         **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -212,7 +211,6 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                               cached_result,
                               cached_headers)
 
-
     url = base_url + operation.EndPoint.format(
         **{p: kwargs.get(p) for p in kwargs if
            p in operation.Parameters and
@@ -248,7 +246,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
     if not isinstance(payload, Mapping):
-        payload = to_dict(payload)
+        payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = 5
     if operation.Timeout:

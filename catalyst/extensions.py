@@ -1,4 +1,3 @@
-import inspect
 from enum import Enum
 from uuid import UUID
 
@@ -11,6 +10,7 @@ import collections
 from datetime import datetime, date, time
 from decimal import Decimal
 
+from inflector import Inflector
 from shapely.geometry import mapping
 from shapely.geometry.base import BaseGeometry
 
@@ -66,7 +66,8 @@ def to_dict(obj: T,
             flags: SerializationFlags = SerializationFlags(''),
             locale: str = DEFAULT_LOCALE,
             depth: int = 3,
-            uuid_hex: bool=True) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
+            uuid_hex: bool = True,
+            inflection: bool = False) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
     Converts a Python object to dictionary, with recursion over the inner objects
     :param obj: Input Python object
@@ -75,6 +76,7 @@ def to_dict(obj: T,
     :return: Python dictionary
     """
 
+    inflector = Inflector()
     if obj is None:
         if flags.ReplaceNoneWithEmptyString:
             return ''
@@ -95,7 +97,10 @@ def to_dict(obj: T,
         annotations = get_type_hints(type(obj))
         res = asdict(obj)
 
-        return {k: to_dict(res[k], flags=flags, locale=locale, depth=depth)
+        return {inflector.underscore(k) if inflection else k: to_dict(res[k], flags=flags,
+                                                                      locale=locale,
+                                                                      depth=depth,
+                                                                      inflection=inflection)
                 for k in res
                 if res[k] is not None
                 or flags.IncludeNulls
@@ -142,21 +147,25 @@ def to_dict(obj: T,
         else:
             return obj.isoformat()
     elif isinstance(obj, collections.Mapping):
-        return {k: to_dict(obj[k], flags=flags, locale=locale, depth=depth - 1)
+        return {inflector.underscore(k) if inflection else k: to_dict(obj[k],
+                                                                      flags=flags,
+                                                                      locale=locale,
+                                                                      depth=depth - 1,
+                                                                      inflection=inflection)
                 for k in obj
                 if obj[k] is not None
                 or flags.IncludeNulls}
 
     elif isinstance(obj, Iterable) or isinstance(obj, collections.Sequence):
 
-        gen = (to_dict(item, flags=flags, locale=locale, depth=depth - 1)
+        gen = (to_dict(item, flags=flags, locale=locale, depth=depth - 1, inflection=inflection)
                for item in obj
                if item is not None
                or flags.IncludeNulls)
 
         return t(gen) if isinstance(obj, collections.Sequence) else tuple(gen)
     else:
-        return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth - 1)
+        return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth - 1, inflection=inflection)
                 for attr in vars(obj) if not attr.startswith('_')}
 
 
@@ -167,7 +176,7 @@ def raw_serialize(data: Any, mime_type: str):
         return registered_serializers[mime_type](to_dict(data, flags=SerializationFlags('IgnoreLocaleCalendar')))
 
 
-def serialize(result: object, depth: int = 5) -> Response:
+def serialize(result: object, depth: int = 5, inflection: bool = False) -> Response:
     """
     Serialize Python object to string or byte-string data adding required headers
     :param result: Flask response
@@ -178,7 +187,8 @@ def serialize(result: object, depth: int = 5) -> Response:
     data = to_dict(result,
                    flags=flags,
                    locale=request.headers.get(HeaderKeys.AcceptLanguage) or DEFAULT_LOCALE,
-                   depth=depth)
+                   depth=depth,
+                   inflection=inflection)
 
     accept_header = request.headers.get(HeaderKeys.Accept).split(';') \
         if request.headers.get(HeaderKeys.Accept) else DEFAULT_LOCALE
