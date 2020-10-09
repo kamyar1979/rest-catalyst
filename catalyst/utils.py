@@ -88,6 +88,14 @@ def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
                 if annotation.__origin__ == Union:
                     if hasattr(annotation, '__args__'):
                         annotation = annotation.__args__[0]
+                elif annotation.__origin__ == tuple:
+                        if hasattr(annotation, '__args__') and annotation.__args__[1] == ...:
+                            inner_Type = annotation.__args__[0]
+                            if is_dataclass(inner_Type):
+                                return tuple(dict_to_object(item, inner_Type) for item in val)
+                            else:
+                                return tuple(parse_value(item, inner_Type) for item in val)
+
 
             if is_dataclass(annotation):
                 return dict_to_object(val, annotation)
