@@ -1,6 +1,72 @@
 CHANGES
 =======
 
+1.17.3
+------
+
+* fix: Bug in async invoker with custom swagger file
+
+1.17.2
+------
+
+* feat: Add inflection, fix security
+
+1.17.1
+------
+
+* feat: Shapely types support for serialization
+
+1.17.0
+------
+
+* feat: Add security features to invoker
+* feat: Retry On Failure added for non-async code
+
+1.16.13
+-------
+
+* feat: Read swagger base url scheme
+
+1.16.12
+-------
+
+* feat: Add timeout capability to service invoker
+
+1.16.11
+-------
+
+* fix: Typing problem in Generic Named Tuples fixed in favor of Python 3.7 and PyCharm fixtures
+
+1.16.10
+-------
+
+* fix: UUID to hex configurable
+
+1.16.9
+------
+
+* feat: Support UUID in DTO types
+
+1.16.8
+------
+
+* fix: Change swagger cache name
+
+1.16.7
+------
+
+* fix: When use\_cache is false, do not write to cache, +verbosity
+
+1.16.6
+------
+
+* fix: Phone number regular expression pattern fixed
+
+1.16.5
+------
+
+* feat: Add Persian/Arabic numbers to regex
+
 1.16.4
 ------
 
