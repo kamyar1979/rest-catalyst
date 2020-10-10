@@ -40,6 +40,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          use_cache: bool = True,
                                          swagger: Optional[OpenAPI] = None,
                                          inflection: bool = False,
+                                         raw_response: bool = False,
                                          **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -138,9 +139,12 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
         if HeaderKeys.ContentType in response.headers:
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-            result = deserialize(await response.content.read(), content_type)
+            result = deserialize(await response.read(), content_type)
         else:
-            result = await response.json()
+            if raw_response:
+                result = await response.read()
+            else:
+                result = await response.json()
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
             logging.info("Writing %s with %s to cache...", operation_id,
@@ -175,6 +179,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         use_cache: bool = True,
                                         swagger: Optional[OpenAPI] = None,
                                         inflection: bool = False,
+                                        raw_response: bool = False,
                                         **kwargs) -> HttpResult:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -291,7 +296,10 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
             result = deserialize(response.content, content_type)
         else:
-            result = response.json()
+            if raw_response:
+                result = response.content
+            else:
+                result = response.json()
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
             logging.info("Writing %s with %s to cache...", operation_id,
