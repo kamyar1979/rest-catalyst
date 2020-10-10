@@ -50,7 +50,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     if swagger:
         openApi = swagger
-        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}/{openApi.Info.BasePath}'
+        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}{openApi.Info.BasePath}'
     else:
         openApi = service_invoker.openApi
         base_url = service_invoker.base_url
@@ -111,7 +111,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if not isinstance(payload, Mapping):
+    if payload and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = None
@@ -189,7 +189,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     if swagger:
         openApi = swagger
-        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}/{openApi.Info.BasePath}'
+        base_url = f'{openApi.Info.Schemes[0]}://{openApi.Info.Host}{openApi.Info.BasePath}'
     else:
         openApi = service_invoker.openApi
         base_url = service_invoker.base_url
@@ -250,7 +250,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if not isinstance(payload, Mapping):
+    if payload and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = 5
