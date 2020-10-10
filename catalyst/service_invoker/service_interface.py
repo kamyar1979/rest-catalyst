@@ -137,12 +137,12 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                              params=query_params,
                                              timeout=timeout)
 
-        if HeaderKeys.ContentType in response.headers:
-            content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-            result = deserialize(await response.read(), content_type)
+        if raw_response:
+            result = await response.read()
         else:
-            if raw_response:
-                result = await response.read()
+            if HeaderKeys.ContentType in response.headers:
+                content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
+                result = deserialize(await response.read(), content_type)
             else:
                 result = await response.json()
 
@@ -292,12 +292,12 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                        params=query_params,
                                        timeout=timeout)
 
-        if HeaderKeys.ContentType in response.headers:
-            content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-            result = deserialize(response.content, content_type)
+        if raw_response:
+            result = response.content
         else:
-            if raw_response:
-                result = response.content
+            if HeaderKeys.ContentType in response.headers:
+                content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
+                result = deserialize(response.content, content_type)
             else:
                 result = response.json()
 
