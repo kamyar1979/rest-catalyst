@@ -238,7 +238,10 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         elif operation.Parameters[item].In == ParameterInputType.FormData:
             var_name = item.replace('$', '').replace('-', '_').lower()
             if var_name in kwargs:
-                data[var_name] = ('', BytesIO(kwargs[var_name]), '', {})
+                if isinstance(kwargs[var_name], bytes):
+                    data[var_name] = ('', BytesIO(kwargs[var_name]), '', {})
+                else:
+                    data[var_name] = ('', str(kwargs[var_name]), '', {})
 
     if security:
         for item in security:
