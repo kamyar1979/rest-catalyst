@@ -41,7 +41,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          swagger: Optional[OpenAPI] = None,
                                          inflection: bool = False,
                                          raw_response: bool = False,
-                                         **kwargs) -> HttpResult:
+                                         **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
@@ -180,7 +180,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         swagger: Optional[OpenAPI] = None,
                                         inflection: bool = False,
                                         raw_response: bool = False,
-                                        **kwargs) -> HttpResult:
+                                        **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
                   kwargs,
