@@ -1,6 +1,7 @@
 import functools
 import inspect
 import logging
+from dataclasses import dataclass
 from http import HTTPStatus
 from io import BytesIO
 from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Mapping
@@ -24,8 +25,8 @@ from catalyst.service_invoker.types import ParameterInputType, RestfulOperation,
 
 T = TypeVar("T")
 
-
-class HttpResult(NamedTuple, Generic[T]):
+@dataclass
+class HttpResult(Generic[T]):
     Status: int
     Body: T
     Headers: Dict[str, str]
