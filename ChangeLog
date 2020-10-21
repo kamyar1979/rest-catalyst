@@ -1,9 +1,14 @@
 CHANGES
 =======
 
-1.17.3
-------
-
+* fix: Form Data for async invoker fixed
+* fix: Form Data parameters fix
+* fix: Switch to DataClass from NamedTuple for generic problems
+* refactor: Fix Generic Typing for invoker
+* fix: Invoker raw response fix for registered content types
+* fix: Empty payload fix
+* feat: Invoker can return raw (non-deserialized) response
+* feat: Support Tuple within DataClass for dict\_to\_object
 * fix: Bug in async invoker with custom swagger file
 
 1.17.2
