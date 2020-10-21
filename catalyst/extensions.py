@@ -5,7 +5,7 @@ import rapidjson
 from dataclasses import asdict, is_dataclass, dataclass
 
 from flask import request, make_response, g, Response
-from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Mapping, Generator
+from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Mapping, Generator, Optional
 import collections
 from datetime import datetime, date, time
 from decimal import Decimal
@@ -62,12 +62,13 @@ def get_request_timezone() -> timezone:
 T = TypeVar('T')
 
 
-def to_dict(obj: T,
+def to_dict(obj: T, *,
             flags: SerializationFlags = SerializationFlags(''),
             locale: str = DEFAULT_LOCALE,
             depth: int = 3,
             uuid_hex: bool = True,
-            inflection: bool = False) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
+            inflection: bool = False,
+            datetime_formatter: Optional[str] = None) -> Union[T, Dict[str, Any], Iterable[Dict[str, Any]], None]:
     """
     Converts a Python object to dictionary, with recursion over the inner objects
     :param obj: Input Python object
@@ -100,7 +101,8 @@ def to_dict(obj: T,
         return {inflector.underscore(k) if inflection else k: to_dict(res[k], flags=flags,
                                                                       locale=locale,
                                                                       depth=depth,
-                                                                      inflection=inflection)
+                                                                      inflection=inflection,
+                                                                      datetime_formatter=datetime_formatter)
                 for k in res
                 if res[k] is not None
                 or flags.IncludeNulls
@@ -131,12 +133,17 @@ def to_dict(obj: T,
                     else:
                         return obj.astimezone(tz)
                 else:
-                    if flags.IgnoreLocaleTimeZone:
-                        return JalaliDatetime(obj).isoformat()
-                    if obj.tzinfo is None:
-                        return JalaliDatetime(tz.fromutc(obj)).isoformat()
+                    if datetime_formatter:
+                        formatter = lambda d: '{{:{}}}'.format(datetime_formatter).format(d)
                     else:
-                        return JalaliDatetime(obj.astimezone(tz)).isoformat()
+                        formatter = JalaliDatetime.isoformat
+
+                    if flags.IgnoreLocaleTimeZone:
+                        return formatter(JalaliDatetime(obj))
+                    if obj.tzinfo is None:
+                        return formatter(JalaliDatetime(tz.fromutc(obj)))
+                    else:
+                        return formatter(JalaliDatetime(obj.astimezone(tz)).isoformat())
             elif t is date:
                 if flags.IgnoreLocaleCalendar:
                     return obj.isoformat()
@@ -151,21 +158,32 @@ def to_dict(obj: T,
                                                                       flags=flags,
                                                                       locale=locale,
                                                                       depth=depth - 1,
-                                                                      inflection=inflection)
+                                                                      inflection=inflection,
+                                                                      datetime_formatter=datetime_formatter)
                 for k in obj
                 if obj[k] is not None
                 or flags.IncludeNulls}
 
     elif isinstance(obj, Iterable) or isinstance(obj, collections.Sequence):
 
-        gen = (to_dict(item, flags=flags, locale=locale, depth=depth - 1, inflection=inflection)
+        gen = (to_dict(item,
+                       flags=flags,
+                       locale=locale,
+                       depth=depth - 1,
+                       inflection=inflection,
+                       datetime_formatter=datetime_formatter)
                for item in obj
                if item is not None
                or flags.IncludeNulls)
 
         return t(gen) if isinstance(obj, collections.Sequence) else tuple(gen)
     else:
-        return {attr: to_dict(getattr(obj, attr), flags=flags, locale=locale, depth=depth - 1, inflection=inflection)
+        return {attr: to_dict(getattr(obj, attr),
+                              flags=flags,
+                              locale=locale,
+                              depth=depth - 1,
+                              inflection=inflection,
+                              datetime_formatter=datetime_formatter)
                 for attr in vars(obj) if not attr.startswith('_')}
 
 
