@@ -187,11 +187,14 @@ def to_dict(obj: T, *,
                 for attr in vars(obj) if not attr.startswith('_')}
 
 
-def raw_serialize(data: Any, mime_type: str):
+def raw_serialize(data: Any, mime_type: str, depth: int = 5, inflection: bool = False):
     if issubclass(type(data), Mapping):
         return registered_serializers[mime_type](data)
     else:
-        return registered_serializers[mime_type](to_dict(data, flags=SerializationFlags('IgnoreLocaleCalendar')))
+        return registered_serializers[mime_type](to_dict(data,
+                                                         flags=SerializationFlags('IgnoreLocaleCalendar'),
+                                                         depth=depth,
+                                                         inflection=inflection))
 
 
 def serialize(result: object, depth: int = 5, inflection: bool = False) -> Response:
