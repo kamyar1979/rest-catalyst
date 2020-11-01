@@ -143,7 +143,7 @@ def to_dict(obj: T, *,
                     if obj.tzinfo is None:
                         return formatter(JalaliDatetime(tz.fromutc(obj)))
                     else:
-                        return formatter(JalaliDatetime(obj.astimezone(tz)).isoformat())
+                        return formatter(JalaliDatetime(obj.astimezone(tz)))
             elif t is date:
                 if flags.IgnoreLocaleCalendar:
                     return obj.isoformat()
