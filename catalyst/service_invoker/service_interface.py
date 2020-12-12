@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from http import HTTPStatus
 from io import BytesIO
-from typing import Dict, Optional, NamedTuple, Any, TypeVar, Generic, Type, Mapping
+from typing import Dict, Optional, Any, TypeVar, Generic, Type, Mapping, FrozenSet
 
 import aiohttp
 from aiohttp import FormData
@@ -42,6 +42,10 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          swagger: Optional[OpenAPI] = None,
                                          inflection: bool = False,
                                          raw_response: bool = False,
+                                         success_status: FrozenSet[int] = frozenset({HTTPStatus.OK,
+                                                                     HTTPStatus.CREATED,
+                                                                     HTTPStatus.NO_CONTENT,
+                                                                     HTTPStatus.ACCEPTED}),
                                          **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -161,7 +165,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
             await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
 
         if result_type:
-            if response.status == HTTPStatus.OK:
+            if response.status in success_status:
                 return HttpResult(response.status,
                                   dict_to_object(result, result_type),
                                   dict(response.headers))
@@ -185,6 +189,10 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                         swagger: Optional[OpenAPI] = None,
                                         inflection: bool = False,
                                         raw_response: bool = False,
+                                        success_status: FrozenSet[int] = frozenset({HTTPStatus.OK,
+                                                                                    HTTPStatus.CREATED,
+                                                                                    HTTPStatus.NO_CONTENT,
+                                                                                    HTTPStatus.ACCEPTED}),
                                         **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -319,7 +327,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             set_cache_item_sync(key + '_headers', response.headers, operation.CacheDuration)
 
         if result_type:
-            if response.status_code == HTTPStatus.OK:
+            if response.status_code in success_status:
                 return HttpResult(response.status_code,
                                   dict_to_object(result, result_type),
                                   dict(response.headers))
