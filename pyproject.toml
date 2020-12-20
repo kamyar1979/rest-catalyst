@@ -55,3 +55,4 @@ build-backend = "poetry.masonry.api"
 enable = true
 pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"
 format = "{base}"
+vcs = "git"
