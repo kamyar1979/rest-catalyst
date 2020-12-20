@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "RestCatalyst"
+version = "0.0.0"
+description = "Utiliry and services for Ostadkar Project"
+authors = ["Kamyar Inanloo <kamyar1979@gmail.com>"]
+packages = [
+    { include = "./catalyst" },
+]
+
+
+[[tool.poetry.source]]
+name = "ostadkar"
+url = "https://gitlab:Dsed+4P0sT6WZfzt6gwriQ==@nexus.ostadkar.pro/repository/pypi-all/simple"
+default = true
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+setuptools = "^51.0.0"
+geojson = "^2.5.0"
+pytz = "^2020.4"
+SQLAlchemy-Utils = "^0.36.8"
+Khayyam = "^3.0.17"
+Cerberus = "^1.3.2"
+toolz = "^0.11.1"
+python-rapidjson = "^1.0"
+SQLAlchemy = "^1.3.22"
+cbor = "^1.0.0"
+pyparsing = "^2.4.7"
+u-msgpack-python = "^2.7.1"
+GeoAlchemy2 = "^0.8.4"
+Flask = "^1.1.2"
+Shapely = "^1.7.1"
+ntplib = "^0.3.4"
+json2html = "^1.3.0"
+base-62 = "^0.1.1"
+Flask-SQLAlchemy = "^2.4.4"
+aiohttp = "^3.7.3"
+PyYAML = "^5.3.1"
+requests = "^2.25.1"
+numpy = "^1.19.4"
+redis = "^3.5.3"
+aioredis = "^1.3.1"
+durations = "^0.3.3"
+blinker = "^1.4"
+tenacity = "^6.3.1"
+Inflector = "^3.0.1"
+
+
+[build-system]
+requires = ["poetry>=0.12", "poetry-dynamic-versioning"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"
+format = "{base}"
