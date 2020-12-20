@@ -5,6 +5,8 @@ deploy:
   stage: deploy
   image: python:3.9.1-slim-buster
   script:
+    - apt-get update
+    - apt-get install -y git
     - pip install poetry
     - pip install poetry-dynamic-versioning
     - poetry build
