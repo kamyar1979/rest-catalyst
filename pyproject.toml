@@ -10,7 +10,7 @@ packages = [
 
 [[tool.poetry.source]]
 name = "ostadkar"
-url = "https://gitlab:Dsed+4P0sT6WZfzt6gwriQ==@nexus.ostadkar.pro/repository/pypi-all/simple"
+url = "https://nexus.ostadkar.pro/repository/pypi-all/simple"
 default = true
 
 
