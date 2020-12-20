@@ -5,6 +5,7 @@ deploy:
   stage: deploy
   image: python:3.9.1-slim-buster
   script:
+    - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
     - pip install poetry-dynamic-versioning
     - poetry build
     - poetry publish --r https://nexus.ostadkar.pro/repository/pypi-internal/ -u gitlab -p "Dsed+4P0sT6WZfzt6gwriQ=="
