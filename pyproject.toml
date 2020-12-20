@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "RestCatalyst"
-version = "1.19.0"
+version = "0.0.0"
 description = "Utiliry and services for Ostadkar Project"
 authors = ["Kamyar Inanloo <kamyar1979@gmail.com>"]
 packages = [
@@ -54,3 +54,5 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry-dynamic-versioning]
 enable = true
+pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"
+format = "{base}"
