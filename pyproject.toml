@@ -7,10 +7,13 @@ packages = [
     { include = "./catalyst" },
 ]
 
+[virtualenvs]
+create = false
+
 
 [[tool.poetry.source]]
 name = "ostadkar"
-url = "https://nexus.ostadkar.pro/repository/pypi-all/simple"
+url = " https://nexus.ostadkar.pro/repository/pypi-internal/"
 default = true
 
 
