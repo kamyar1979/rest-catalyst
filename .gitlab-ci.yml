@@ -10,7 +10,7 @@ deploy:
     - pip install poetry
     - pip install poetry-dynamic-versioning
     - poetry build
-    - poetry publish -r ostadkar -u gitlab -p "Dsed+4P0sT6WZfzt6gwriQ=="
+    - poetry publish -r ostadkar_publish -u gitlab -p "Dsed+4P0sT6WZfzt6gwriQ=="
   only:
     - tags
   tags:
