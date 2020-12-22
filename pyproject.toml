@@ -2,7 +2,7 @@
 name = "RestCatalyst"
 version = "0.0.0"
 description = "Utiliry and services for Ostadkar Project"
-authors = ["Kamyar Inanloo <kamyar1979@gmail.com>"]
+authors = ["Kamyar Inanloo <kamyar1979@gmail.com>", "Navid Tadjalli <navidta@gmail.com>", "Sina Mehrabi <sina.mehrabi1990@gmail.com>", "Sajedeh Tafazzoli <s.tafazzoli@gmail.com>"]
 packages = [
     { include = "./catalyst" },
 ]
@@ -13,8 +13,13 @@ create = false
 
 [[tool.poetry.source]]
 name = "ostadkar"
-url = " https://nexus.ostadkar.pro/repository/pypi-internal/"
+url = "https://gitlab:Dsed+4P0sT6WZfzt6gwriQ==@nexus.ostadkar.pro/repository/pypi-all/simple"
 default = true
+
+[[tool.poetry.source]]
+name = "ostadkar_publish"
+url = " https://nexus.ostadkar.pro/repository/pypi-internal/"
+secondary = true
 
 
 [tool.poetry.dependencies]

@@ -8,7 +8,6 @@ deploy:
     - apt-get update
     - apt-get install -y git
     - pip install poetry
-    - poetry config virtualenvs.create false
     - pip install poetry-dynamic-versioning
     - poetry build
     - poetry publish -r ostadkar -u gitlab -p "Dsed+4P0sT6WZfzt6gwriQ=="
