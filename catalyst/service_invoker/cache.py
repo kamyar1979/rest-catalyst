@@ -9,7 +9,7 @@ import aioredis
 import umsgpack
 from dataclasses import dataclass
 
-T = TypeVar('T', object, dataclass)
+T = TypeVar('T', object, Any)
 async_redis: Optional[aioredis.Redis] = None
 redis: Optional[StrictRedis] = None
 
