@@ -210,3 +210,4 @@ node_modules
 
 # Swagger build file
 swagger.yml
+poetry.lock
