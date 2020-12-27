@@ -38,7 +38,7 @@ async def init_config(uri: str, db: Optional[int] = None):
         async_redis = await aioredis.create_redis_pool(uri, db=db)
 
 
-async def get_config_value(key: str, t: Type[T]) -> T:
+async def get_config_value(key: str, t: Type[T] = str) -> T:
     value = await async_redis.get(key)
     if value:
         return t(value)
@@ -46,7 +46,7 @@ async def get_config_value(key: str, t: Type[T]) -> T:
         return default_configuration[key]
 
 
-def get_config_value_sync(key: str, t: Type[T]) -> T:
+def get_config_value_sync(key: str, t: Type[T] = str) -> T:
     value = redis.get(key)
     if value:
         return t(value)
