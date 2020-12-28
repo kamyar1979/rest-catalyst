@@ -53,6 +53,7 @@ durations = "^0.3.3"
 blinker = "^1.4"
 tenacity = "^6.3.1"
 Inflector = "^3.0.1"
+tomlkit = "^0.7.0"
 
 
 [build-system]
