@@ -17,14 +17,14 @@ async def load_default_config(url: str, keys: Optional[FrozenSet[str]] = None):
         response = await session.get(url)
         if response.status == HTTPStatus.OK:
             data = tomlkit.loads(await response.text())
-            default_configuration = {k: data.get(k) for k in (keys if keys else data)}
+            default_configuration = {k: data[k]['default'] for k in (keys if keys else data) if k in data}
 
 def load_default_config_sync(url: str, keys: FrozenSet[str]):
     global default_configuration
     response = requests.get(url)
     if response.status_code == HTTPStatus.OK:
         data = tomlkit.loads(response.text)
-        default_configuration = {k: data.get(k) for k in keys}
+        default_configuration = {k: data[k]['default'] for k in (keys if keys else data) if k in data}
 
 
 def init_config_sync(uri: str,
