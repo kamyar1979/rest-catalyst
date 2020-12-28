@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Optional, TypeVar, Type, Dict, FrozenSet, Any
 
 import aioredis
+import tomlkit
 from redis import StrictRedis
 import requests
 import aiohttp
@@ -15,14 +16,14 @@ async def load_default_config(url: str, keys: Optional[FrozenSet[str]] = None):
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
         response = await session.get(url)
         if response.status == HTTPStatus.OK:
-            data = await response.json()
+            data = tomlkit.loads(await response.text())
             default_configuration = {k: data.get(k) for k in (keys if keys else data)}
 
 def load_default_config_sync(url: str, keys: FrozenSet[str]):
     global default_configuration
     response = requests.get(url)
     if response.status_code == HTTPStatus.OK:
-        data = response.json()
+        data = tomlkit.loads(response.text)
         default_configuration = {k: data.get(k) for k in keys}
 
 
