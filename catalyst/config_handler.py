@@ -10,13 +10,13 @@ import aiohttp
 T = TypeVar('T')
 default_configuration: Dict[str, Any]
 
-async def load_default_config(url: str, keys: FrozenSet[str]):
+async def load_default_config(url: str, keys: Optional[FrozenSet[str]] = None):
     global default_configuration
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
         response = await session.get(url)
         if response.status == HTTPStatus.OK:
             data = await response.json()
-            default_configuration = {k: data.get(k) for k in keys}
+            default_configuration = {k: data.get(k) for k in (keys if keys else data)}
 
 def load_default_config_sync(url: str, keys: FrozenSet[str]):
     global default_configuration
@@ -26,16 +26,26 @@ def load_default_config_sync(url: str, keys: FrozenSet[str]):
         default_configuration = {k: data.get(k) for k in keys}
 
 
-def init_config_sync(uri: str, db: Optional[int] = None):
+def init_config_sync(uri: str,
+                     db: Optional[int] = None, *,
+                     default_config: Optional[str] = None,
+                     keys: Optional[FrozenSet[str]] = None):
     global redis
     if uri:
         redis = StrictRedis.from_url(uri, db)
+    if default_config:
+        load_default_config_sync(default_config, keys)
 
 
-async def init_config(uri: str, db: Optional[int] = None):
+async def init_config(uri: str,
+                      db: Optional[int] = None, *,
+                      default_config: Optional[str] = None,
+                      keys: Optional[FrozenSet[str]] = None):
     global async_redis
     if uri:
         async_redis = await aioredis.create_redis_pool(uri, db=db)
+    if default_config:
+        await load_default_config(default_config, keys)
 
 
 async def get_config_value(key: str, t: Type[T] = str) -> T:
