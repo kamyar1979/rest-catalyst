@@ -43,7 +43,9 @@ async def get_config_value(key: str, t: Type[T] = str) -> T:
     if value:
         return t(value)
     elif key in default_configuration:
-        return default_configuration[key]
+        value = default_configuration[key]
+        await async_redis.set(key, value)
+        return value
 
 
 def get_config_value_sync(key: str, t: Type[T] = str) -> T:
@@ -51,4 +53,6 @@ def get_config_value_sync(key: str, t: Type[T] = str) -> T:
     if value:
         return t(value)
     elif key in default_configuration:
-        return default_configuration[key]
+        value = default_configuration[key]
+        redis.set(key, value)
+        return value
