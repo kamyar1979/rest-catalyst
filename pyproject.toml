@@ -13,12 +13,12 @@ create = false
 
 [[tool.poetry.source]]
 name = "ostadkar"
-url = "https://gitlab:Dsed+4P0sT6WZfzt6gwriQ==@nexus.ostadkar.pro/repository/pypi-all/simple"
+url = "${NEXUS_URL}/repository/pypi-all/simple"
 default = true
 
 [[tool.poetry.source]]
 name = "ostadkar_publish"
-url = " https://nexus.ostadkar.pro/repository/pypi-internal/"
+url = "${NEXUS_HOST}/repository/pypi-internal/"
 secondary = true
 
 
