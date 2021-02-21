@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from enum import Enum
 from typing import Any, AnyStr, Tuple, TypeVar, Type, Optional
 
@@ -10,7 +10,6 @@ from shapely.geometry.base import BaseGeometry
 
 from catalyst.constants import DEFAULT_CHARSET
 from catalyst.dispatcher import type_handler
-
 
 
 @type_handler
@@ -80,7 +79,24 @@ def parse_time(val: Any) -> time:
     return time.fromisoformat(value)
 
 
+@type_handler
+def parse_timedelta(val: Any) -> timedelta:
+    value = str(val, encoding=DEFAULT_CHARSET) if type(val) is bytes else val
+    m = re.match(
+        r'P(?:(?P<year>\d+)Y)?(?:(?P<month>\d+)M)?(?:(?P<day>\d+)D)?(?:T(?:(?P<hour>\d+)H)?(?:(?P<minute>\d+)M)?(?:(?P<second>\d+)S)?)?',
+        value)
+    if m:
+        return timedelta(
+            days=int(m.group('year') or 0) * 365 + int(m.group('month') or 0) * 30 + int(m.group('day') or 0),
+            hours=int(m.group('hour') or 0),
+            minutes=int(m.group('minute') or 0),
+            seconds=int(m.group('second') or 0)
+        )
+
+
 E = TypeVar('E', Enum, type(None))
+
+
 @type_handler
 def parse_enum(val: Any, requested_type: Type[E]) -> Enum:
     if any(val == item.value for item in requested_type):
