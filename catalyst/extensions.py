@@ -7,7 +7,7 @@ from dataclasses import asdict, is_dataclass, dataclass
 from flask import request, make_response, g, Response
 from typing import Iterable, Any, get_type_hints, TypeVar, Dict, Union, Type, Mapping, Generator, Optional
 import collections
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 
 from inflector import Inflector
@@ -120,7 +120,7 @@ def to_dict(obj: T, *,
             return obj.hex
         else:
             return obj
-    elif t in (datetime, date, time):
+    elif t in (datetime, date, time, timedelta):
         country: str = locale[-2:]
         tz = timezone(country_timezones[country][0])
         if locale == 'fa-IR':
@@ -151,6 +151,15 @@ def to_dict(obj: T, *,
                     return JalaliDate(obj).isoformat()
             elif t is time:
                 return obj.isoformat()
+            elif isinstance(obj, timedelta):
+                return re.sub(r'0[YMDHS]', '',
+                              'P{year}Y{month}M{day}DT{hour}H{minute}M{second}S'
+                              .format(year=obj.days // 365,
+                                      month=(obj.days % 365) // 30,
+                                      day=obj.days % 30,
+                                      hour=obj.seconds // 3600,
+                                      minute=(obj.seconds % 3600) // 60,
+                                      second=obj.seconds % 60))
         else:
             return obj.isoformat()
     elif isinstance(obj, collections.Mapping):
