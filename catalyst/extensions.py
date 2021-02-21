@@ -120,7 +120,7 @@ def to_dict(obj: T, *,
             return obj.hex
         else:
             return obj
-    elif t in (datetime, date, time, timedelta):
+    elif t in (datetime, date, time):
         country: str = locale[-2:]
         tz = timezone(country_timezones[country][0])
         if locale == 'fa-IR':
@@ -151,17 +151,18 @@ def to_dict(obj: T, *,
                     return JalaliDate(obj).isoformat()
             elif t is time:
                 return obj.isoformat()
-            elif isinstance(obj, timedelta):
-                return re.sub(r'0[YMDHS]', '',
-                              'P{year}Y{month}M{day}DT{hour}H{minute}M{second}S'
-                              .format(year=obj.days // 365,
-                                      month=(obj.days % 365) // 30,
-                                      day=obj.days % 30,
-                                      hour=obj.seconds // 3600,
-                                      minute=(obj.seconds % 3600) // 60,
-                                      second=obj.seconds % 60))
         else:
             return obj.isoformat()
+    elif isinstance(obj, timedelta):
+        return re.sub(r'0[YMDHS]', '',
+                      'P{year}Y{month}M{day}DT{hour}H{minute}M{second}S'
+                      .format(year=obj.days // 365,
+                              month=(obj.days % 365) // 30,
+                              day=obj.days % 30,
+                              hour=obj.seconds // 3600,
+                              minute=(obj.seconds % 3600) // 60,
+                              second=obj.seconds % 60))
+
     elif isinstance(obj, collections.Mapping):
         return {inflector.underscore(k) if inflection else k: to_dict(obj[k],
                                                                       flags=flags,
