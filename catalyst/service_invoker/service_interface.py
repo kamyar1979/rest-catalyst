@@ -22,8 +22,10 @@ from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
 from catalyst.dispatcher import deserializers
 from catalyst.service_invoker.types import ParameterInputType, RestfulOperation, OpenAPI
+from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_result, TryAgain
 
 T = TypeVar("T")
+
 
 @dataclass
 class HttpResult(Generic[T]):
@@ -43,9 +45,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                          inflection: bool = False,
                                          raw_response: bool = False,
                                          success_status: FrozenSet[int] = frozenset({HTTPStatus.OK,
-                                                                     HTTPStatus.CREATED,
-                                                                     HTTPStatus.NO_CONTENT,
-                                                                     HTTPStatus.ACCEPTED}),
+                                                                                     HTTPStatus.CREATED,
+                                                                                     HTTPStatus.NO_CONTENT,
+                                                                                     HTTPStatus.ACCEPTED}),
                                          **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -108,7 +110,6 @@ async def invoke_inter_service_operation(operation_id: str, *,
                 else:
                     data.add_field(var_name, str(kwargs[var_name]))
 
-
     if security:
         for item in security:
             sec = openApi.Info.SecurityDefinitions.get(item)
@@ -129,54 +130,66 @@ async def invoke_inter_service_operation(operation_id: str, *,
     elif openApi.Info.Timeout:
         timeout = openApi.Info.Timeout / 1000.0
 
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+    retry_params = {
+        'total': 5,
+        'backoff_factor': 0,
+        'status_forcelist': [429, 500, 502, 503, 504],
+        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
+    }
 
-        if data().size:
-            response = await session.request(operation.Method,
-                                             url,
-                                             data=data,
-                                             headers=headers,
-                                             params=query_params,
-                                             timeout=timeout)
+    if openApi.Info.RetryOnFailure:
+        retry_params = openApi.Info.RetryOnFailure
+    if operation.RetryOnFailure:
+        retry_params.update(**operation.RetryOnFailure)
+
+    @retry(wait=wait_fixed(retry_params['backoff_factor']),
+           stop=stop_after_attempt(retry_params['total']),
+           retry=retry_if_result(lambda res: operation.Method not in retry_params['method_whitelist'] and
+                                             res.status in retry_params['status_forcelist']))
+    async def do_request():
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+            return await session.request(operation.Method,
+                                         url,
+                                         data=data if data().size else None,
+                                         json=payload if not data().size else None,
+                                         headers=headers,
+                                         params=query_params,
+                                         timeout=timeout)
+
+
+    response = await do_request()
+
+    if raw_response:
+        result = await response.read()
+    else:
+        if HeaderKeys.ContentType in response.headers:
+            content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
+            result = deserialize(await response.read(), content_type)
         else:
-            response = await session.request(operation.Method,
-                                             url,
-                                             json=payload,
-                                             headers=headers,
-                                             params=query_params,
-                                             timeout=timeout)
+            result = await response.json()
 
-        if raw_response:
-            result = await response.read()
-        else:
-            if HeaderKeys.ContentType in response.headers:
-                content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-                result = deserialize(await response.read(), content_type)
-            else:
-                result = await response.json()
-
-        if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
-            logging.info("Writing %s with %s to cache...", operation_id,
-                         kwargs)
-            if result_type:
-                await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
-            else:
-                await set_cache_item(key, result, operation.CacheDuration)
-            await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
-
+    if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
+        logging.info("Writing %s with %s to cache...", operation_id,
+                     kwargs)
         if result_type:
-            if response.status in success_status:
-                return HttpResult(response.status,
-                                  dict_to_object(result, result_type),
-                                  dict(response.headers))
-            else:
-                return HttpResult(response.status,
-                                  await response.text(),
-                                  dict(response.headers))
+            await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
+        else:
+            await set_cache_item(key, result, operation.CacheDuration)
+        await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
+
+    if result_type:
+        if response.status in success_status:
+            return HttpResult(response.status,
+                              dict_to_object(result, result_type),
+                              dict(response.headers))
         else:
             return HttpResult(response.status,
-                              result,
+                              await response.text(),
                               dict(response.headers))
+    else:
+        return HttpResult(response.status,
+                          result,
+                          dict(response.headers))
 
 
 def invoke_inter_service_operation_sync(operation_id: str, *,
@@ -293,20 +306,13 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
         session.mount(base_url, adapter)
 
-        if data:
-            response = session.request(operation.Method,
-                                       url,
-                                       data=data,
-                                       headers=headers,
-                                       params=query_params,
-                                       timeout=timeout)
-        else:
-            response = session.request(operation.Method,
-                                       url,
-                                       json=payload,
-                                       headers=headers,
-                                       params=query_params,
-                                       timeout=timeout)
+        response = session.request(operation.Method,
+                                   url,
+                                   data=data,
+                                   json=payload if not data else None,
+                                   headers=headers,
+                                   params=query_params,
+                                   timeout=timeout)
 
         if raw_response:
             result = response.content
