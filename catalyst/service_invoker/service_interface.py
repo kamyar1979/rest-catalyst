@@ -144,7 +144,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     @retry(wait=wait_fixed(retry_params['backoff_factor']),
            stop=stop_after_attempt(retry_params['total']),
-           retry=retry_if_result(lambda res: operation.Method not in retry_params['method_whitelist'] and
+           retry=retry_if_result(lambda res: operation.Method.upper() not in retry_params['method_whitelist'] and
                                              res.status in retry_params['status_forcelist']))
     async def do_request():
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
