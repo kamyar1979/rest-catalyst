@@ -36,12 +36,13 @@ loop = asyncio.get_event_loop()
 async def invoke():
     await init_cache('redis://localhost/3')
     result = await service_interface.invoke_inter_service_operation('get_orders_number',
-                                                                    order_number='gIBf3zZB9P0',
+                                                                    order_number='iK7ueu5jBnu0',
                                                                     result_type=alien.OrderDTO)
+
     print(result.Status)
     print(result.Body)
 
-    await invalidate_cache('order', order_number='69hRqRTYRek')
+    await invalidate_cache('order', order_number='iK7ueu5jBnu')
 
 
 loop.run_until_complete(invoke())
