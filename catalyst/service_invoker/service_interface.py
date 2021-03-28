@@ -143,13 +143,15 @@ async def invoke_inter_service_operation(operation_id: str, *,
         retry_params.update(**operation.RetryOnFailure)
 
 
-    def is_retriable(res):
-        return (operation.Method.upper() not in retry_params['method_whitelist']) and \
-               (res.status in retry_params['status_forcelist'])
+    def is_retriable(method_whitelist, status_forcelist, res):
+        return (operation.Method.upper() not in method_whitelist) and \
+               (res.status in status_forcelist)
 
     @retry(wait=wait_fixed(retry_params['backoff_factor']),
            stop=stop_after_attempt(retry_params['total']),
-           retry=retry_if_result(is_retriable))
+           retry=retry_if_result(functools.partial(is_retriable,
+                                                   retry_params['method_whitelist'],
+                                                   retry_params['status_forcelist'])))
     async def do_request():
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             return await session.request(operation.Method,
