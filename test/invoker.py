@@ -35,9 +35,10 @@ loop = asyncio.get_event_loop()
 
 async def invoke():
     await init_cache('redis://localhost/3')
-    result = await service_interface.invoke_inter_service_operation('get_orders_number',
-                                                                    order_number='iK7ueu5jBnu0',
-                                                                    result_type=alien.OrderDTO)
+    result = await service_interface.invoke_inter_service_operation('city_slug_services_details_get',
+                                                                    city_slug='tehran',
+                                                                    service_slug='carpentry',
+                                                                    result_type=alien.CityServiceDTO)
 
     print(result.Status)
     print(result.Body)
