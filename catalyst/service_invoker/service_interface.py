@@ -145,7 +145,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     def is_retriable(method_whitelist, status_forcelist, res):
         return (operation.Method.upper() not in method_whitelist) and \
-               (res.status in status_forcelist)
+               (res.Status in status_forcelist)
 
     @retry(wait=wait_fixed(retry_params['backoff_factor']),
            stop=stop_after_attempt(retry_params['total']),
