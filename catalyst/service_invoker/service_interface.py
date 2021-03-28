@@ -152,7 +152,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
            retry=retry_if_result(functools.partial(is_retriable,
                                                    retry_params['method_whitelist'],
                                                    retry_params['status_forcelist'])))
-    async def do_request():
+    async def do_request() -> HttpResult:
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             response = await session.request(operation.Method,
                                          url,
@@ -171,32 +171,32 @@ async def invoke_inter_service_operation(operation_id: str, *,
                     result = deserialize(await response.read(), content_type)
                 else:
                     result = await response.json()
-        return result, response.status, response.headers
 
-    result, status, headers = await do_request()
+            if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
+                logging.info("Writing %s with %s to cache...", operation_id,
+                             kwargs)
+                if result_type:
+                    await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
+                else:
+                    await set_cache_item(key, result, operation.CacheDuration)
+                await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
 
-    if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
-        logging.info("Writing %s with %s to cache...", operation_id,
-                     kwargs)
-        if result_type:
-            await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
-        else:
-            await set_cache_item(key, result, operation.CacheDuration)
-        await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
 
-    if result_type:
-        if status in success_status:
-            return HttpResult(status,
-                              dict_to_object(result, result_type),
-                              dict(headers))
-        else:
-            return HttpResult(status,
-                              await response.text(),
-                              dict(headers))
-    else:
-        return HttpResult(status,
-                          result,
-                          dict(headers))
+            if result_type:
+                if response.status in success_status:
+                    return HttpResult(response.status,
+                                      dict_to_object(result, result_type),
+                                      dict(response.headers))
+                else:
+                    return HttpResult(response.status,
+                                      await response.text(),
+                                      dict(response.headers))
+            else:
+                return HttpResult(response.status,
+                                  result,
+                                  dict(response.headers))
+
+    return await do_request()
 
 
 def invoke_inter_service_operation_sync(operation_id: str, *,
