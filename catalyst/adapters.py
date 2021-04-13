@@ -3,8 +3,7 @@ from sqlalchemy.ext.baked import BakedQuery
 __author__ = 'kamyar'
 
 from sqlalchemy import func, or_, and_, not_, inspect, Column, bindparam
-from sqlalchemy.orm import Query, RelationshipProperty, contains_eager, aliased, load_only, Session, ColumnProperty, \
-    InstrumentedAttribute
+from sqlalchemy.orm import Query, RelationshipProperty, contains_eager, aliased, load_only, Session, ColumnProperty
 from sqlalchemy.ext import baked
 from abc import abstractmethod
 import re
@@ -16,6 +15,8 @@ import operator
 import collections
 from typing import Callable, Tuple, Optional, Dict, List, Any, NamedTuple, Union, TypeVar
 from logging import Logger
+
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import ColumnElement, BinaryExpression
 from sqlalchemy.sql import Alias
 
