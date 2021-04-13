@@ -3,14 +3,14 @@ from sqlalchemy.ext.baked import BakedQuery
 __author__ = 'kamyar'
 
 from sqlalchemy import func, or_, and_, not_, inspect, Column, bindparam
-from sqlalchemy.orm import joinedload, Query, RelationshipProperty, contains_eager, aliased, load_only, Session
+from sqlalchemy.orm import Query, RelationshipProperty, contains_eager, aliased, load_only, Session, ColumnProperty, \
+    InstrumentedAttribute
 from sqlalchemy.ext import baked
 from abc import abstractmethod
 import re
 import pyparsing as pp
 from urllib.parse import parse_qs, unquote_plus
 import functools
-from sqlalchemy_utils.functions import get_type
 from datetime import datetime, time
 import operator
 import collections
@@ -20,7 +20,6 @@ from sqlalchemy.sql.elements import ColumnElement, BinaryExpression
 from sqlalchemy.sql import Alias
 
 bakery = baked.bakery()
-
 
 class PartConstants:
     """
@@ -43,6 +42,18 @@ class FilterExpression(NamedTuple):
     join_list: Tuple[str, ...]
     alias_map: Dict[str, Alias]
 
+
+def get_type(expr):
+    if hasattr(expr, 'type'):
+        return expr.type
+    elif isinstance(expr, InstrumentedAttribute):
+        expr = expr.property
+
+    if isinstance(expr, ColumnProperty):
+        return expr.columns[0].type
+    elif isinstance(expr, RelationshipProperty):
+        return expr.mapper.class_
+    raise TypeError("Couldn't inspect type.")
 
 Entity = TypeVar('Entity')
 
