@@ -8,6 +8,7 @@ from geoalchemy2 import WKBElement
 from geoalchemy2.shape import to_shape
 from sqlalchemy import inspect
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.engine import Row
 from toolz import compose
 from inspect import isclass
 
@@ -80,7 +81,7 @@ def create_mapping(model: T,
     if model is None:
         return {}
 
-    if issubclass(type(model), Tuple):  # The type is named tuple
+    if isinstance(model, Row):
         model_type_name = type(model[model_item_index]).__name__
         model_object_info = inspect(getattr(model, model_type_name))
         extractor = itemgetter(model_item_index)
