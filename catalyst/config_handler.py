@@ -52,7 +52,7 @@ async def init_config(uri: str,
 async def get_config_value(key: str, t: Type[T] = str) -> T:
     value = await async_redis.get(key, encoding='utf-8')
     if value:
-        return t(str(value, encoding='utf-8'))
+        return t(str(value))
     elif key in default_configuration:
         value = default_configuration[key]
         await async_redis.set(key, t(value))
