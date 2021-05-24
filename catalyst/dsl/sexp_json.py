@@ -14,7 +14,9 @@ SExpr << (LP + SExprList + RP)
 
 
 def to_json(expr: str) -> str:
-    return json.dumps(SExpr.parseString(expr).asList())
+    parsed = SExpr.parseString(expr).asList()
+    if parsed:
+        return json.dumps(parsed[0])
 
 
 def from_json(val: str) -> str:
