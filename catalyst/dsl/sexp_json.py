@@ -3,7 +3,7 @@ import json
 
 LP = pp.Literal("(").suppress()
 RP = pp.Literal(")").suppress()
-String = pp.Word(pp.alphanums + '_,.#@<>=+=/*%')
+String = pp.Word(pp.alphanums + '_,.#@<>=+=/*%[]')
 SingleQuoteString = pp.QuotedString(quoteChar="'", unquoteResults=False)
 DoubleQuoteString = pp.QuotedString(quoteChar='"', unquoteResults=False)
 QuotedString = SingleQuoteString | DoubleQuoteString
@@ -21,6 +21,6 @@ def to_json(expr: str) -> str:
 
 def from_json(val: str) -> str:
     if isinstance(val, list):
-        return '(' + ' '.join(from_json(e) for e in val) + ')'
+        return f"({' '.join(from_json(e) for e in val)})"
     else:
         return str(val)
