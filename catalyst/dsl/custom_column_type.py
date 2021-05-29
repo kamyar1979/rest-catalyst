@@ -8,13 +8,7 @@ class SExpression(UserDefinedType):
         return "S-Expression"
 
     def bind_processor(self, dialect):
-        def process(value):
-            return to_json(value)
-
-        return process
+        return to_json
 
     def result_processor(self, dialect, coltype):
-        def process(value):
-            return from_json(value)
-
-        return process
+        return from_json

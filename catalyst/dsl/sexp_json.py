@@ -3,7 +3,7 @@ import json
 
 LP = pp.Literal("(").suppress()
 RP = pp.Literal(")").suppress()
-String = pp.Word(pp.alphanums + '_,.#@<>=+=/*%[]')
+String = pp.Word(pp.alphanums + '-_,.#@<>=+=/*%[]:')
 SingleQuoteString = pp.QuotedString(quoteChar="'", unquoteResults=False)
 DoubleQuoteString = pp.QuotedString(quoteChar='"', unquoteResults=False)
 QuotedString = SingleQuoteString | DoubleQuoteString
