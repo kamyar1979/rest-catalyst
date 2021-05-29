@@ -27,7 +27,7 @@ class HyLangExpression(UserDefinedType):
                 for expr in expr_list:
                     if isinstance(expr, hy.models.HySymbol) or \
                             isinstance(expr, hy.models.HyString):
-                        if str(expr) == 'dispatch-tag-symbol':
+                        if str(expr) == 'dispatch-tag-macro':
                             yield '#'
                         else:
                             yield str(expr)
