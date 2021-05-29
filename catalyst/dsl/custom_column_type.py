@@ -26,9 +26,13 @@ class HyLangExpression(UserDefinedType):
             def process_expr(expr_list):
                 for expr in expr_list:
                     if isinstance(expr, hy.models.HySymbol) or \
-                            isinstance(expr, hy.models.HyString) or \
-                            isinstance(expr, hy.models.HyKeyword):
-                        yield str(expr)
+                            isinstance(expr, hy.models.HyString):
+                        if str(expr) == 'dispatch-tag-symbol':
+                            yield '#'
+                        else:
+                            yield str(expr)
+                    elif isinstance(expr, hy.models.HyKeyword):
+                        yield f':{expr}'
                     elif isinstance(expr, hy.models.HyExpression):
                         yield process_expr(expr)
                     else:
