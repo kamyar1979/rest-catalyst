@@ -28,7 +28,7 @@ class HyLangExpression(UserDefinedType):
                     if isinstance(expr, hy.models.HySymbol) or \
                             isinstance(expr, hy.models.HyString) or \
                             isinstance(expr, hy.models.HyKeyword):
-                        yield f'"{expr}"'
+                        yield str(expr)
                     elif isinstance(expr, hy.models.HyExpression):
                         yield process_expr(expr)
                     else:
