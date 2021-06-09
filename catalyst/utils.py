@@ -114,8 +114,8 @@ def box_args(t: Type):
         sig = inspect.signature(func)
         func_args = sig.parameters
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
+        def prepare_values(args, kwargs):
+
             arg_values = iter(args)
 
             def get_atoms():
@@ -137,9 +137,26 @@ def box_args(t: Type):
                             continue
                         yield next(arg_values)
 
-            return func(*get_values(), **atom_values)
+            return get_values(), atom_values
+
+        if inspect.iscoroutinefunction(func):
+
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+
+                pos, kw = prepare_values(args, kwargs)
+
+                return await func(*pos, **kw)
+
+        else:
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+
+                pos, kw = prepare_values(args, kwargs)
+
+                return func(*pos, **kw)
 
         return wrapper
 
     return decorate
-
