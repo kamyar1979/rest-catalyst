@@ -4,7 +4,8 @@ import struct
 import uuid
 from dataclasses import fields, dataclass, is_dataclass
 from datetime import datetime
-from typing import Tuple, TypeVar, Dict, Any, Type, Optional, Union
+from functools import wraps
+from typing import Tuple, TypeVar, Dict, Any, Type, Optional, Union, Callable
 
 import ntplib
 import pytz
@@ -89,13 +90,12 @@ def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
                     if hasattr(annotation, '__args__'):
                         annotation = annotation.__args__[0]
                 elif annotation.__origin__ == tuple:
-                        if hasattr(annotation, '__args__') and annotation.__args__[1] == ...:
-                            inner_Type = annotation.__args__[0]
-                            if is_dataclass(inner_Type):
-                                return tuple(dict_to_object(item, inner_Type) for item in val)
-                            else:
-                                return tuple(parse_value(item, inner_Type) for item in val)
-
+                    if hasattr(annotation, '__args__') and annotation.__args__[1] == ...:
+                        inner_Type = annotation.__args__[0]
+                        if is_dataclass(inner_Type):
+                            return tuple(dict_to_object(item, inner_Type) for item in val)
+                        else:
+                            return tuple(parse_value(item, inner_Type) for item in val)
 
             if is_dataclass(annotation):
                 return dict_to_object(val, annotation)
@@ -107,3 +107,39 @@ def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
     if is_dataclass(cls):
         cons_params = inspect.signature(cls).parameters
         return cls(**{k: get_field_value(data.get(k), cons_params[k].annotation) for k in data if k in cons_params})
+
+
+def box_args(t: Type):
+    def decorate(func: Callable[[...], Any]):
+        sig = inspect.signature(func)
+        func_args = sig.parameters
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            arg_values = iter(args)
+
+            def get_atoms():
+                for name, value in kwargs.items():
+                    if func_args[name].annotation == t:
+                        yield name, t(kwargs[name])
+                        continue
+                    yield name, kwargs[name]
+
+            atom_values = dict(get_atoms())
+
+            def get_values():
+                for name, param in func_args.items():
+                    if name not in atom_values:
+                        if param.annotation == t:
+                            if param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                                              inspect.Parameter.POSITIONAL_ONLY):
+                                yield t(next(arg_values))
+                            continue
+                        yield next(arg_values)
+
+            return func(*get_values(), **atom_values)
+
+        return wrapper
+
+    return decorate
+
