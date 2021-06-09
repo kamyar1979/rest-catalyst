@@ -110,7 +110,7 @@ def dict_to_object(data: Dict[str, Any], cls: Type[T]) -> T:
 
 
 def box_args(t: Type):
-    def decorate(func: Callable[[...], Any]):
+    def decorate(func: Callable):
         sig = inspect.signature(func)
         func_args = sig.parameters
 
