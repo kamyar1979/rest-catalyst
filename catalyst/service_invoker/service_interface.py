@@ -26,6 +26,22 @@ from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_result, Try
 
 T = TypeVar("T")
 
+config = {
+    'retry_params': {
+        'total': 5,
+        'backoff_factor': 0,
+        'status_forcelist': [429, 500, 502, 503, 504],
+        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
+    },
+    'async_retry_params': {
+        'total': 5,
+        'backoff_factor': 0,
+        'status_forcelist': [429, 500, 502, 503, 504],
+        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
+    },
+
+}
+
 
 @dataclass
 class HttpResult(Generic[T]):
@@ -121,7 +137,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if payload and not isinstance(payload, Mapping):
+    if payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = None
@@ -130,18 +146,12 @@ async def invoke_inter_service_operation(operation_id: str, *,
     elif openApi.Info.Timeout:
         timeout = openApi.Info.Timeout / 1000.0
 
-    retry_params = {
-        'total': 5,
-        'backoff_factor': 0,
-        'status_forcelist': [429, 500, 502, 503, 504],
-        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
-    }
+    retry_params = config['async_retry_params']
 
     if openApi.Info.RetryOnFailure:
         retry_params = openApi.Info.RetryOnFailure
     if operation.RetryOnFailure:
         retry_params.update(**operation.RetryOnFailure)
-
 
     def is_retriable(method_whitelist, status_forcelist, res):
         return (operation.Method.upper() not in method_whitelist) and \
@@ -155,13 +165,12 @@ async def invoke_inter_service_operation(operation_id: str, *,
     async def do_request() -> HttpResult:
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             response = await session.request(operation.Method,
-                                         url,
-                                         data=data if data().size else None,
-                                         json=payload if not data().size else None,
-                                         headers=headers,
-                                         params=query_params,
-                                         timeout=timeout)
-
+                                             url,
+                                             data=data if data().size else None,
+                                             json=payload if not data().size else None,
+                                             headers=headers,
+                                             params=query_params,
+                                             timeout=timeout)
 
             if raw_response:
                 result = await response.read()
@@ -180,7 +189,6 @@ async def invoke_inter_service_operation(operation_id: str, *,
                 else:
                     await set_cache_item(key, result, operation.CacheDuration)
                 await set_cache_item(key + '_headers', response.headers, operation.CacheDuration)
-
 
             if result_type:
                 if response.status in success_status:
@@ -286,7 +294,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if payload and not isinstance(payload, Mapping):
+    if payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = 5
@@ -295,12 +303,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     elif openApi.Info.Timeout:
         timeout = openApi.Info.Timeout / 1000.0
 
-    retry_params = {
-        'total': 5,
-        'backoff_factor': 0,
-        'status_forcelist': [429, 500, 502, 503, 504],
-        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
-    }
+    retry_params = config['retry_params']
 
     if openApi.Info.RetryOnFailure:
         retry_params = openApi.Info.RetryOnFailure
