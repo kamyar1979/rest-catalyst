@@ -39,7 +39,7 @@ config = {
         'status_forcelist': [429, 500, 502, 503, 504],
         'method_whitelist': ["HEAD", "GET", "OPTIONS"]
     },
-
+    'timeout': 5
 }
 
 
@@ -140,7 +140,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
-    timeout: Optional[float] = None
+    timeout: Optional[float] = config['timeout']
     if operation.Timeout:
         timeout = operation.Timeout / 1000.0
     elif openApi.Info.Timeout:
@@ -297,7 +297,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
-    timeout: Optional[float] = 5
+    timeout: Optional[float] = config['timeout']
     if operation.Timeout:
         timeout = operation.Timeout / 1000.0
     elif openApi.Info.Timeout:
