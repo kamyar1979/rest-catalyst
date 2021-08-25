@@ -22,7 +22,7 @@ from catalyst.dispatcher import deserialize
 from catalyst.service_invoker.errors import InterServiceError
 from catalyst.dispatcher import deserializers
 from catalyst.service_invoker.types import ParameterInputType, RestfulOperation, OpenAPI
-from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_result, TryAgain
+from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_result
 
 T = TypeVar("T")
 
@@ -177,7 +177,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
             else:
                 if HeaderKeys.ContentType in response.headers:
                     content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-                    result = deserialize(await response.read(), content_type)
+                    response_data = await response.read()
+                    if response_data:
+                        result = deserialize(response_data, content_type)
                 else:
                     result = await response.json()
 
@@ -329,9 +331,11 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         else:
             if HeaderKeys.ContentType in response.headers:
                 content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-                result = deserialize(response.content, content_type)
+                if response.content:
+                    result = deserialize(response.content, content_type)
             else:
-                result = response.json()
+                if response.content:
+                    result = response.json()
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
             logging.info("Writing %s with %s to cache...", operation_id,
