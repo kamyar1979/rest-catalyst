@@ -63,8 +63,9 @@ def dispatch(validate: Union[type, bool] = True, from_header: Tuple[str, ...] = 
                 else:
                     for item in registered_deserializers:
                         if item in content_type_header:
-                            data.update(deserialize(request.data, item))
-                            break
+                            if request.data:
+                                data.update(deserialize(request.data, item))
+                                break
                 # endregion
 
                 # region Fill the inventory with query string items
