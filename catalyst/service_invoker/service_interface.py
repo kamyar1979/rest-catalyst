@@ -64,6 +64,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                                                                      HTTPStatus.CREATED,
                                                                                      HTTPStatus.NO_CONTENT,
                                                                                      HTTPStatus.ACCEPTED}),
+                                         parse_unknown_response=True,
                                          **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -180,7 +181,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                     response_data = await response.read()
                     result = deserialize(response_data, content_type) if response_data else None
                 else:
-                    result = await response.json()
+                    result = await response.json() if parse_unknown_response else None
 
             if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
                 logging.info("Writing %s with %s to cache...", operation_id,
@@ -222,6 +223,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                                                                     HTTPStatus.CREATED,
                                                                                     HTTPStatus.NO_CONTENT,
                                                                                     HTTPStatus.ACCEPTED}),
+                                        parse_unknown_response=True,
                                         **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -332,7 +334,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                 content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
                 result = deserialize(response.content, content_type) if response.content else None
             else:
-                result = response.json() if response.content else None
+                result = response.json() if parse_unknown_response and response.content else None
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
             logging.info("Writing %s with %s to cache...", operation_id,
