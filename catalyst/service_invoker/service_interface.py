@@ -178,8 +178,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                 if HeaderKeys.ContentType in response.headers:
                     content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
                     response_data = await response.read()
-                    if response_data:
-                        result = deserialize(response_data, content_type)
+                    result = deserialize(response_data, content_type) if response_data else None
                 else:
                     result = await response.json()
 
@@ -331,11 +330,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         else:
             if HeaderKeys.ContentType in response.headers:
                 content_type, *_ = response.headers[HeaderKeys.ContentType].split(';')
-                if response.content:
-                    result = deserialize(response.content, content_type)
+                result = deserialize(response.content, content_type) if response.content else None
             else:
-                if response.content:
-                    result = response.json()
+                result = response.json() if response.content else None
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
             logging.info("Writing %s with %s to cache...", operation_id,
