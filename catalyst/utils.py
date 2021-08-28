@@ -13,7 +13,7 @@ from catalyst.dispatcher import parse_value
 
 from catalyst.constants import ConfigKeys
 from . import app
-import base62
+import base36
 from catalyst.dispatcher import type_handlers
 
 
@@ -67,7 +67,7 @@ def uuid_comb() -> uuid.UUID:
 
 def create_tracking_code(value: uuid.UUID) -> str:
     h, l = struct.unpack('LL', value.bytes)
-    return base62.encode(h ^ l)
+    return base36.dumps(h ^ l)
 
 
 def validation_patterns(**kwargs: str):
