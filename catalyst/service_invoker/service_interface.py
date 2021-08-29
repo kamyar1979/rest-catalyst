@@ -137,7 +137,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
                 elif sec.In == ParameterInputType.Query:
                     query_params[sec.Name] = security[item]
 
-    headers.update({'Accept-Language': locale, 'Accept': serialization})
+    if not raw_response:
+        headers.update({'Accept-Language': locale, 'Accept': serialization})
 
     if payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
@@ -297,7 +298,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                 elif sec.In == ParameterInputType.Query:
                     query_params[sec.Name] = security[item]
 
-    headers.update({'Accept-Language': locale, 'Accept': serialization})
+    if not raw_response:
+        headers.update({'Accept-Language': locale, 'Accept': serialization})
 
     if payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
