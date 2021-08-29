@@ -65,6 +65,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                                                                      HTTPStatus.NO_CONTENT,
                                                                                      HTTPStatus.ACCEPTED}),
                                          parse_unknown_response=True,
+                                         pass_through_headers=None,
                                          **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -107,7 +108,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
            operation.Parameters[p].In == ParameterInputType.Path and
            p in operation.Parameters})
 
-    headers = {}
+    headers = pass_through_headers or {}
     query_params = {}
     data = FormData()
     for item in operation.Parameters:
@@ -224,6 +225,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                                                                     HTTPStatus.NO_CONTENT,
                                                                                     HTTPStatus.ACCEPTED}),
                                         parse_unknown_response=True,
+                                        pass_through_headers=None,
                                         **kwargs) -> HttpResult[T]:
     logging.debug("Trying to call %s with params %s and body %s from %s",
                   operation_id,
@@ -266,7 +268,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
            operation.Parameters[p].In == ParameterInputType.Path and
            p in operation.Parameters})
 
-    headers = {}
+    headers = pass_through_headers or {}
     query_params = {}
     data = {}
     for item in operation.Parameters:
