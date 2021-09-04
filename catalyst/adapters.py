@@ -22,6 +22,7 @@ from sqlalchemy.sql import Alias
 
 bakery = baked.bakery()
 
+
 class PartConstants:
     """
     OData Query String parts
@@ -55,6 +56,7 @@ def get_type(expr):
     elif isinstance(expr, RelationshipProperty):
         return expr.mapper.class_
     raise TypeError("Couldn't inspect type.")
+
 
 Entity = TypeVar('Entity')
 
@@ -631,38 +633,18 @@ class ODataQueryAdapter(QueryAdapter):
                             if '.' in s:
                                 inner_parts = s.split('.')
 
-                                if inspect(self.cls).attrs[inner_parts[0]].uselist:
-                                    if inner_parts[-2:-1] == ['any']:
-                                        del inner_parts[-2:-1]
-                                        exists_expressions.append(getattr(self.cls, inner_parts[0]))
-                                    elif inner_parts[-2:-1] == ['all']:
-                                        del inner_parts[-2:-1]
-                                        join_item = '/'.join(inner_parts[:-1])
-                                        if join_item not in join_list:
-                                            join_list.append(join_item)
-                                        self.use_row_number = True
+                                entity = functools.reduce(
+                                    lambda c, p: get_type(getattr(c, p)),
+                                    inner_parts[:-1],
+                                    self.cls)
 
-                                    entity = functools.reduce(
-                                        lambda c, p: get_type(getattr(c, p)),
-                                        inner_parts[:-1],
-                                        self.cls)
+                                join_item = '/'.join(inner_parts[:-1])
+                                if join_item not in join_list:
+                                    join_list.append(join_item)
+                                    alias_map[join_item] = aliased(entity,
+                                                                   name='_'.join(inner_parts[:-1]))
 
-                                    return getattr(entity, inner_parts[-1])
-
-                                else:
-
-                                    entity = functools.reduce(
-                                        lambda c, p: get_type(getattr(c, p)),
-                                        inner_parts[:-1],
-                                        self.cls)
-
-                                    join_item = '/'.join(inner_parts[:-1])
-                                    if join_item not in join_list:
-                                        join_list.append(join_item)
-                                        alias_map[join_item] = aliased(entity,
-                                                                       name='_'.join(inner_parts[:-1]))
-
-                                    return getattr(alias_map[join_item], inner_parts[-1])
+                                return getattr(alias_map[join_item], inner_parts[-1])
 
                             else:
                                 if re.match(r'^[A-Z_]+$', s):
