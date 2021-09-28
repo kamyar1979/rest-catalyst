@@ -93,7 +93,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if operation.CacheDuration and is_cache_initialized() and use_cache:
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
-            logging.info("Reading %s with %s from cache...",
+            logging.debug("Reading %s with %s from cache...",
                          operation_id,
                          kwargs)
             cached_headers = await get_cache_item(key + '_headers')
@@ -140,7 +140,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if not raw_response:
         headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if payload != None and not isinstance(payload, Mapping):
+
+    if payload != None and not isinstance(payload, (str, bytes)) and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = config['timeout']
@@ -169,8 +170,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             response = await session.request(operation.Method,
                                              url,
-                                             data=data if data().size else None,
-                                             json=payload if not data().size else None,
+                                             data=payload if isinstance(payload, (str, bytes)) else data if data().size else None,
+                                             json=payload if not isinstance(payload, (str, bytes)) and not data().size else None,
                                              headers=headers,
                                              params=query_params,
                                              timeout=timeout)
@@ -186,7 +187,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                     result = await response.json() if parse_unknown_response else None
 
             if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
-                logging.info("Writing %s with %s to cache...", operation_id,
+                logging.debug("Writing %s with %s to cache...", operation_id,
                              kwargs)
                 if result_type:
                     await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
@@ -254,7 +255,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if operation.CacheDuration and is_cache_initialized() and use_cache:
         cached_result = get_cache_item_sync(key, result_type)
         if cached_result:
-            logging.info("Reading %s with %s from cache...",
+            logging.debug("Reading %s with %s from cache...",
                          operation_id,
                          kwargs)
             cached_headers = get_cache_item_sync(key + '_headers')
@@ -301,7 +302,10 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if not raw_response:
         headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-    if payload != None and not isinstance(payload, Mapping):
+
+    if isinstance(payload, (str, bytes)):
+        data = payload
+    elif payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
     timeout: Optional[float] = config['timeout']
@@ -341,7 +345,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                 result = response.json() if parse_unknown_response and response.content else None
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
-            logging.info("Writing %s with %s to cache...", operation_id,
+            logging.debug("Writing %s with %s to cache...", operation_id,
                          kwargs)
             if result_type:
                 set_cache_item_sync(key, dict_to_object(result, result_type), operation.CacheDuration)
