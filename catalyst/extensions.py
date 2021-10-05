@@ -246,7 +246,7 @@ def serialize(result: object, depth: int = 5, inflection: bool = False) -> Respo
 U = TypeVar('U')
 
 
-def odata(count: int, items: Generator[Type[U], None, None]) -> Dict[str, Union[int, Iterable[Type[U]]]]:
+def odata(count: int, items: Generator[U, None, None]) -> Dict[str, Union[int, Iterable[U]]]:
     return {ODATA_COUNT: count,
             ODATA_VALUE: items}
 
