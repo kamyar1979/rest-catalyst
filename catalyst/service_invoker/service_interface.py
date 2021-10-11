@@ -7,6 +7,7 @@ from io import BytesIO
 from typing import Dict, Optional, Any, TypeVar, Generic, Type, Mapping, FrozenSet
 
 import aiohttp
+import tomlkit
 from aiohttp import FormData
 import requests
 from requests.adapters import HTTPAdapter
@@ -26,21 +27,10 @@ from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_result
 
 T = TypeVar("T")
 
-config = {
-    'retry_params': {
-        'total': 5,
-        'backoff_factor': 0,
-        'status_forcelist': [429, 500, 502, 503, 504],
-        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
-    },
-    'async_retry_params': {
-        'total': 5,
-        'backoff_factor': 0,
-        'status_forcelist': [429, 500, 502, 503, 504],
-        'method_whitelist': ["HEAD", "GET", "OPTIONS"]
-    },
-    'timeout': 5
-}
+import importlib.resources as pkg_resources
+
+defaults = tomlkit.loads(pkg_resources.read_text(service_invoker, 'defaults.toml'))
+config = defaults['config']
 
 
 @dataclass
@@ -94,8 +84,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
             logging.debug("Reading %s with %s from cache...",
-                         operation_id,
-                         kwargs)
+                          operation_id,
+                          kwargs)
             cached_headers = await get_cache_item(key + '_headers')
 
             return HttpResult(HTTPStatus.OK,
@@ -140,7 +130,6 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if not raw_response:
         headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-
     if payload != None and not isinstance(payload, (str, bytes)) and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
 
@@ -170,8 +159,10 @@ async def invoke_inter_service_operation(operation_id: str, *,
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             response = await session.request(operation.Method,
                                              url,
-                                             data=payload if isinstance(payload, (str, bytes)) else data if data().size else None,
-                                             json=payload if not isinstance(payload, (str, bytes)) and not data().size else None,
+                                             data=payload if isinstance(payload, (
+                                             str, bytes)) else data if data().size else None,
+                                             json=payload if not isinstance(payload,
+                                                                            (str, bytes)) and not data().size else None,
                                              headers=headers,
                                              params=query_params,
                                              timeout=timeout)
@@ -188,7 +179,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
             if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
                 logging.debug("Writing %s with %s to cache...", operation_id,
-                             kwargs)
+                              kwargs)
                 if result_type:
                     await set_cache_item(key, dict_to_object(result, result_type), operation.CacheDuration)
                 else:
@@ -256,8 +247,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         cached_result = get_cache_item_sync(key, result_type)
         if cached_result:
             logging.debug("Reading %s with %s from cache...",
-                         operation_id,
-                         kwargs)
+                          operation_id,
+                          kwargs)
             cached_headers = get_cache_item_sync(key + '_headers')
 
             return HttpResult(HTTPStatus.OK,
@@ -302,7 +293,6 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     if not raw_response:
         headers.update({'Accept-Language': locale, 'Accept': serialization})
 
-
     if isinstance(payload, (str, bytes)):
         data = payload
     elif payload != None and not isinstance(payload, Mapping):
@@ -346,7 +336,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
         if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
             logging.debug("Writing %s with %s to cache...", operation_id,
-                         kwargs)
+                          kwargs)
             if result_type:
                 set_cache_item_sync(key, dict_to_object(result, result_type), operation.CacheDuration)
             else:
