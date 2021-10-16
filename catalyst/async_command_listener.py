@@ -21,7 +21,7 @@ async def listen_for_topic(self):
                 await self.handlers[cmd](data)
 
 
-def command_handler(func):
+def command_handler_wrapper(func):
     sig = inspect.signature(func)
     func_args = sig.parameters
     param_names = tuple(func_args.keys())
@@ -35,14 +35,14 @@ def command_handler(func):
     return wrapper
 
 
-def register_command_handler(cls: Type):
+def command_handler(cls: Type):
     def constructor(self, address: str, topic: str):
         self.address = address
         self.topic = topic
         self.handlers = {}
         for name, func in inspect.getmembers(cls, predicate=inspect.isfunction):
             if name != '__init__':
-                self.handlers[name] = command_handler(getattr(self, name))
+                self.handlers[name] = command_handler_wrapper(getattr(self, name))
         cls.listen = listen_for_topic
 
     cls.__init__ = constructor
