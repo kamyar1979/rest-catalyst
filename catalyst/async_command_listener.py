@@ -19,7 +19,10 @@ async def listen_for_topic(self):
             data = umsgpack.loads(blob)
             cmd = command.decode('utf-8')
             if cmd in self.handlers:
-                await self.handlers[cmd](data)
+                if asyncio.iscoroutinefunction(self.handlers[cmd]):
+                    await self.handlers[cmd](data)
+                else:
+                    self.handlers[cmd](data)
 
 
 def command_handler_wrapper(func):
