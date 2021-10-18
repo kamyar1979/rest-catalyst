@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 from typing import Type
@@ -26,8 +27,12 @@ def command_handler_wrapper(func):
     func_args = sig.parameters
     param_names = tuple(func_args.keys())
 
-    async def wrapper(data):
-        await func(**{k: data.get(k) for k in param_names})
+    if asyncio.iscoroutinefunction(func):
+        async def wrapper(data):
+            await func(**{k: data.get(k) for k in param_names})
+    else:
+        def wrapper(data):
+            func(**{k: data.get(k) for k in param_names})
 
     wrapper.__name__ = func.__name__
     wrapper.__signature__ = sig
