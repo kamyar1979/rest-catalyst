@@ -92,8 +92,9 @@ async def invoke_inter_service_operation(operation_id: str, *,
                               cached_result,
                               cached_headers)
 
+    values = kwargs.copy()
     url = base_url + operation.EndPoint.format(
-        **{p: kwargs.get(p) for p in kwargs if
+        **{p: values.pop(p) for p in kwargs if
            p in operation.Parameters and
            operation.Parameters[p].In == ParameterInputType.Path and
            p in operation.Parameters})
@@ -104,19 +105,19 @@ async def invoke_inter_service_operation(operation_id: str, *,
     for item in operation.Parameters:
         if operation.Parameters[item].In == ParameterInputType.Header:
             var_name = item.replace('X-', '').replace('-', '_').lower()
-            if var_name in kwargs:
-                headers[item] = str(kwargs[var_name])
+            if var_name in values:
+                headers[item] = str(values.pop(var_name))
         elif operation.Parameters[item].In == ParameterInputType.Query:
             var_name = item.replace('$', '').replace('-', '_').lower()
-            if var_name in kwargs:
-                query_params[item] = str(kwargs[var_name])
+            if var_name in values:
+                query_params[item] = str(values.pop(var_name))
         elif operation.Parameters[item].In == ParameterInputType.FormData:
             var_name = item.replace('$', '').replace('-', '_').lower()
-            if var_name in kwargs:
-                if isinstance(kwargs[var_name], bytes):
-                    data.add_field(var_name, BytesIO(kwargs[var_name]))
+            if var_name in values:
+                if isinstance(values[var_name], bytes):
+                    data.add_field(var_name, BytesIO(values.pop(var_name)))
                 else:
-                    data.add_field(var_name, str(kwargs[var_name]))
+                    data.add_field(var_name, str(values.pop(var_name)))
 
     if security:
         for item in security:
@@ -132,6 +133,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     if payload != None and not isinstance(payload, (str, bytes)) and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
+        if values:
+            payload.update(values)
 
     timeout: Optional[float] = config['timeout']
     if operation.Timeout:
@@ -255,8 +258,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                               cached_result,
                               cached_headers)
 
+    values = kwargs.copy()
     url = base_url + operation.EndPoint.format(
-        **{p: kwargs.get(p) for p in kwargs if
+        **{p: values.pop(p) for p in kwargs if
            p in operation.Parameters and
            operation.Parameters[p].In == ParameterInputType.Path and
            p in operation.Parameters})
@@ -267,19 +271,19 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
     for item in operation.Parameters:
         if operation.Parameters[item].In == ParameterInputType.Header:
             var_name = item.replace('X-', '').replace('-', '_').lower()
-            if var_name in kwargs:
-                headers[item] = str(kwargs[var_name])
+            if var_name in values:
+                headers[item] = str(values.pop(var_name))
         elif operation.Parameters[item].In == ParameterInputType.Query:
             var_name = item.replace('$', '').replace('-', '_').lower()
-            if var_name in kwargs:
-                query_params[item] = str(kwargs[var_name])
+            if var_name in values:
+                query_params[item] = str(values.pop(var_name))
         elif operation.Parameters[item].In == ParameterInputType.FormData:
             var_name = item.replace('$', '').replace('-', '_').lower()
-            if var_name in kwargs:
-                if isinstance(kwargs[var_name], bytes):
-                    data[var_name] = ('', BytesIO(kwargs[var_name]), '', {})
+            if var_name in values:
+                if isinstance(values[var_name], bytes):
+                    data[var_name] = ('', BytesIO(values.pop(var_name)), '', {})
                 else:
-                    data[var_name] = ('', str(kwargs[var_name]), '', {})
+                    data[var_name] = ('', str(values.pop(var_name)), '', {})
 
     if security:
         for item in security:
@@ -297,6 +301,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         data = payload
     elif payload != None and not isinstance(payload, Mapping):
         payload = to_dict(payload, inflection=inflection)
+        if values:
+            payload.update(values)
 
     timeout: Optional[float] = config['timeout']
     if operation.Timeout:
