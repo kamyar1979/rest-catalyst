@@ -135,6 +135,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
         payload = to_dict(payload, inflection=inflection)
         if values:
             payload.update(values)
+    if values and not payload:
+        payload = values
 
     timeout: Optional[float] = config['timeout']
     if operation.Timeout:
@@ -303,6 +305,8 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
         payload = to_dict(payload, inflection=inflection)
         if values:
             payload.update(values)
+    if values and not payload:
+        payload = values
 
     timeout: Optional[float] = config['timeout']
     if operation.Timeout:
