@@ -7,8 +7,7 @@ deploy:
   script:
     - apt-get update
     - apt-get install -y git
-    - pip install poetry
-    - pip install poetry-dynamic-versioning
+    - pip install -U pip poetry poetry-dynamic-versioning --index-url=$NEXUS_URL/repository/pypi-all/simple/
     - sed -i "s|\${NEXUS_URL}|$NEXUS_URL|g; s|\${NEXUS_HOST}|$NEXUS_HOST|g;" pyproject.toml
     - poetry build
     - poetry publish -r ostadkar_publish -u $NEXUS_USER -p $NEXUS_PASS
