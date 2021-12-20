@@ -109,7 +109,7 @@ def to_dict(obj: T, *,
                 or (flags.ReplaceNoneWithEmptyString and annotations[k]) == str}
     elif issubclass(t, BaseGeometry):
         return mapping(obj)
-    elif t in (int, str, bytes, float, bool):
+    elif any(issubclass(t, parent) for parent in (int, str, bytes, float, bool)):
         return obj
     elif issubclass(t, Enum):
         return obj.value
