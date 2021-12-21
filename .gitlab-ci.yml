@@ -14,4 +14,4 @@ deploy:
   only:
     - tags
   tags:
-    - develop
+    - runner-all-build-01
