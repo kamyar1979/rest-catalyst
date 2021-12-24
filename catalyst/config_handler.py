@@ -44,7 +44,7 @@ async def init_config(uri: str,
                       keys: Optional[FrozenSet[str]] = None):
     global async_redis
     if uri:
-        async_redis = await aioredis.create_redis_pool(uri, db=db)
+        async_redis = await aioredis.from_url(uri, db=db)
     if default_config:
         await load_default_config(default_config, keys)
 
