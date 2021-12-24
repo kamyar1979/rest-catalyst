@@ -7,7 +7,6 @@ from catalyst.utils import dict_to_object
 from redis import StrictRedis
 import aioredis
 import umsgpack
-from dataclasses import dataclass
 
 T = TypeVar('T', object, Any)
 async_redis: Optional[aioredis.Redis] = None
@@ -27,7 +26,7 @@ def init_cache_sync(uri: str, db: Optional[int] = None):
 async def init_cache(uri: str, db: Optional[int] = None):
     global async_redis
     if uri:
-        async_redis = await aioredis.create_redis_pool(uri, db=db)
+        async_redis = await aioredis.from_url(uri, db=db)
 
 
 async def get_cache_item(key: str,
