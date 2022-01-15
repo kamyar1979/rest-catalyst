@@ -6,6 +6,8 @@ import rapidjson
 
 class SExpression(UserDefinedType):
 
+    cache_ok = True
+
     def get_col_spec(self):
         return "S-Expression"
 
