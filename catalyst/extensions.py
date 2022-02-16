@@ -15,7 +15,7 @@ from shapely.geometry import mapping
 from shapely.geometry.base import BaseGeometry
 
 from catalyst.constants import RegExPatterns, MimeTypes, HeaderKeys, SerializerFlagString, ODATA_COUNT, ODATA_VALUE, \
-    DEFAULT_LOCALE, DEFAULT_CHARSET
+    DEFAULT_LOCALE, DEFAULT_CHARSET, DEFAULT_TIMEZONE
 from khayyam import JalaliDatetime, JalaliDate
 from pytz import country_timezones, timezone
 import re
@@ -122,8 +122,11 @@ def to_dict(obj: T, *,
             return obj
     elif t in (datetime, date, time):
         country: str = locale[-2:]
-        tz = timezone(country_timezones[country][0])
-        if locale == 'fa-IR':
+        if country in country_timezones:
+            tz = timezone(country_timezones[country][0])
+        else:
+            tz = timezone(DEFAULT_TIMEZONE)
+        if locale.startswith('fa-'):
             if t is datetime:
                 if flags.IgnoreLocaleCalendar:
                     if flags.IgnoreLocaleTimeZone:
