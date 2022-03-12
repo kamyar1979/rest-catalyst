@@ -157,7 +157,7 @@ def to_dict(obj: T, *,
         else:
             return obj.isoformat()
     elif isinstance(obj, timedelta):
-        return re.sub(r'0[YMDHS]', '',
+        return re.sub(r'(?<=[^1-9])0[YMDHS]', '',
                       'P{year}Y{month}M{day}DT{hour}H{minute}M{second}S'
                       .format(year=obj.days // 365,
                               month=(obj.days % 365) // 30,
