@@ -54,6 +54,7 @@ tenacity = "^6.3.1"
 Inflector = "^3.0.1"
 tomlkit = "^0.7.0"
 pynng = "^0.7.1"
+hy = "1.0a3"
 
 
 [build-system]
