@@ -33,7 +33,8 @@ def get_swagger_info(swagger: Dict[str, Any]) -> SwaggerInfo:
                        RetryOnFailure=swagger.get('x-retry-on-failure'),
                        BasePath=swagger.get('basePath') or '',
                        SecurityDefinitions=parse_security_definitions(swagger.get('securityDefinitions')),
-                       Security=swagger.get('security'))
+                       Security=swagger.get('security'),
+                       Proxy=swagger.get('x-proxy'))
 
 
 def get_operation_info(swagger: dict, path: str, action: str) -> RestfulOperation:
