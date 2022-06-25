@@ -34,6 +34,7 @@ class SwaggerInfo:
     BasePath: Optional[str] = None
     SecurityDefinitions: Optional[Dict[str, ApiSecurity]] = None
     Security: Optional[str] = None
+    Proxy: Optional[str] = None
 
 
 class ParameterInfo(NamedTuple):
