@@ -10,8 +10,7 @@ import aiohttp
 import tomlkit
 from aiohttp import FormData
 import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter, Retry
 
 from catalyst.extensions import to_dict
 from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync, \
@@ -151,6 +150,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if operation.RetryOnFailure:
         retry_params.update(**operation.RetryOnFailure)
 
+
     def is_retriable(method_whitelist, status_forcelist, res):
         return (operation.Method.upper() not in method_whitelist) and \
                (res.Status in status_forcelist)
@@ -170,7 +170,8 @@ async def invoke_inter_service_operation(operation_id: str, *,
                                                                             (str, bytes)) and not data().size else None,
                                              headers=headers,
                                              params=query_params,
-                                             timeout=timeout)
+                                             timeout=timeout,
+                                             proxy=openApi.Info.Proxy)
 
             if raw_response:
                 result = await response.read()
@@ -333,7 +334,9 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
                                    json=payload if not data else None,
                                    headers=headers,
                                    params=query_params,
-                                   timeout=timeout)
+                                   timeout=timeout,
+                                   verify=False,
+                                   proxies={'http': openApi.Info.Proxy, 'https': openApi.Info.Proxy})
 
         if raw_response:
             result = response.content
