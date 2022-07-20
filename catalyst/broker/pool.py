@@ -12,7 +12,7 @@ connections: List[pika.BlockingConnection] = []
 serialization_format: str = MimeTypes.JSON
 connection_url: str = ''
 pool_size: int = 5
-pool_recycle_period: int = 900
+pool_recycle_period: Optional[int] = None
 last_pool_init: datetime = datetime.utcnow()
 
 
@@ -26,7 +26,7 @@ def renew_pool():
 
 @contextmanager
 def acquire() -> pika.BlockingConnection:
-    if (datetime.utcnow() - last_pool_init).seconds > pool_recycle_period:
+    if pool_recycle_period and (datetime.utcnow() - last_pool_init).seconds > pool_recycle_period:
         renew_pool()
     if not connections:
         renew_pool()
