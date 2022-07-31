@@ -14,7 +14,7 @@ from requests.adapters import HTTPAdapter, Retry
 
 from catalyst.extensions import to_dict
 from catalyst.service_invoker.cache import get_cache_item, get_cache_item_sync, set_cache_item, set_cache_item_sync, \
-    is_cache_initialized, delete_cache_items, delete_cache_items_sync
+    delete_cache_items, delete_cache_items_sync, is_cache_ready, is_cache_ready_sync
 from catalyst.utils import dict_to_object
 from catalyst import service_invoker
 from catalyst.constants import HeaderKeys
@@ -79,7 +79,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
 
     logging.debug("Cache key is %s.", key)
 
-    if operation.CacheDuration and is_cache_initialized() and use_cache:
+    if operation.CacheDuration and await is_cache_ready() and use_cache:
         cached_result = await get_cache_item(key, result_type)
         if cached_result:
             logging.debug("Reading %s with %s from cache...",
@@ -150,7 +150,6 @@ async def invoke_inter_service_operation(operation_id: str, *,
     if operation.RetryOnFailure:
         retry_params.update(**operation.RetryOnFailure)
 
-
     def is_retriable(method_whitelist, status_forcelist, res):
         return (operation.Method.upper() not in method_whitelist) and \
                (res.Status in status_forcelist)
@@ -165,7 +164,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
             response = await session.request(operation.Method,
                                              url,
                                              data=payload if isinstance(payload, (
-                                             str, bytes)) else data if data().size else None,
+                                                 str, bytes)) else data if data().size else None,
                                              json=payload if not isinstance(payload,
                                                                             (str, bytes)) and not data().size else None,
                                              headers=headers,
@@ -183,7 +182,7 @@ async def invoke_inter_service_operation(operation_id: str, *,
                 else:
                     result = await response.json() if parse_unknown_response else None
 
-            if use_cache and operation.CacheDuration and is_cache_initialized() and response.status == HTTPStatus.OK:
+            if use_cache and operation.CacheDuration and await is_cache_ready() and response.status == HTTPStatus.OK:
                 logging.debug("Writing %s with %s to cache...", operation_id,
                               kwargs)
                 if result_type:
@@ -249,7 +248,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
 
     logging.debug("Cache key is %s.", key)
 
-    if operation.CacheDuration and is_cache_initialized() and use_cache:
+    if operation.CacheDuration and is_cache_ready_sync() and use_cache:
         cached_result = get_cache_item_sync(key, result_type)
         if cached_result:
             logging.debug("Reading %s with %s from cache...",
@@ -347,7 +346,7 @@ def invoke_inter_service_operation_sync(operation_id: str, *,
             else:
                 result = response.json() if parse_unknown_response and response.content else None
 
-        if use_cache and operation.CacheDuration and is_cache_initialized() and response.status_code == HTTPStatus.OK:
+        if use_cache and operation.CacheDuration and is_cache_ready_sync() and response.status_code == HTTPStatus.OK:
             logging.debug("Writing %s with %s to cache...", operation_id,
                           kwargs)
             if result_type:
