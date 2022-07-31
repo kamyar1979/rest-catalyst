@@ -7,20 +7,27 @@ from catalyst.utils import dict_to_object
 from redis import StrictRedis
 import aioredis
 import umsgpack
+from tenacity import retry, wait_fixed
 
 T = TypeVar('T', object, Any)
 async_redis: Optional[aioredis.Redis] = None
 redis: Optional[StrictRedis] = None
 
 
-def is_cache_initialized() -> bool:
-    return bool(redis) or bool(async_redis)
+@retry(wait=wait_fixed(5))
+async def is_cache_ready():
+    return bool(async_redis) and await async_redis.ping()
+
+
+@retry(wait=wait_fixed(5))
+def is_cache_ready_sync():
+    return bool(redis) and redis.ping()
 
 
 def init_cache_sync(uri: str, db: Optional[int] = None):
     global redis
     if uri:
-        redis = StrictRedis.from_url(uri, db)
+        redis = StrictRedis.from_url(uri, db=db)
 
 
 async def init_cache(uri: str, db: Optional[int] = None):
