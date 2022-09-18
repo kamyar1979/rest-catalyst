@@ -1,18 +1,19 @@
 import gettext
+import logging
 import logging.config
 import os
 from importlib import import_module
 from typing import Optional, Tuple, Callable, Dict
 
+import sentry_sdk
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sentry_sdk.integrations.flask import FlaskIntegration
 from sqlalchemy.exc import SQLAlchemyError
 
 from catalyst.constants import ConfigKeys, DEFAULT_LOCALE, DEFAULT_CHARSET, ErrorMessages
 from catalyst.errors import ApiError, ErrorDTO
 from catalyst.extensions import serialize
-import logging
-
 
 logger = logging.getLogger('Catalyst')
 
@@ -72,7 +73,6 @@ def register_error_handlers():
     #                            lambda e: serialize(ErrorDTO(Code=100500, Message=str(e))))
 
 
-
 def init_i18n():
     """
     Initialize localization and translation files
@@ -90,3 +90,9 @@ def init_i18n():
 def init_logging():
     logging.config.fileConfig(app.config[ConfigKeys.LoggingConfig])
 
+
+def init_sentry_logging(enable_flask_integration: bool = True):
+    sentry_sdk.init(
+        dsn=app.config[ConfigKeys.SentryDSN],
+        integrations=[FlaskIntegration(), ] if enable_flask_integration else [],
+    )
