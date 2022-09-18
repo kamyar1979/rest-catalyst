@@ -55,6 +55,7 @@ Inflector = "^3.0.1"
 tomlkit = "^0.7.0"
 pynng = "^0.7.1"
 hy = "1.0a3"
+sentry-sdk="1.9.8"
 
 
 [build-system]

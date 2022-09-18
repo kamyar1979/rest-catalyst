@@ -29,6 +29,7 @@ class ConfigKeys:
     BaseUri = "BASE_URI"
     ServiceDiscoveryUrl = "SERVICE_DISCOVERY_URL"
     SwaggerUrl = "SWAGGER_URL"
+    SentryDSN = 'SENTRY_DSN'
 
 
 class RegExPatterns:
